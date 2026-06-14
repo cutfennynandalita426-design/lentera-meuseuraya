@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi PLTS - Langkah 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: url('/assets/background/simulasi_bg.png') center/cover no-repeat;
+    background-color: #3e2723;
+    display: flex;
+    flex-direction: column;
+}
+.wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+/* Top wood/header */
+.top-wood {
+    width: 100%;
+    height: 64px;
+    background: #4b2d1d;
+    box-shadow: 0 6px 14px rgba(0,0,0,.35);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 100;
+}
+.top-wood .title {
+    color: #f6ecd9;
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+.top-wood .subtitle {
+    color: #f6ecd9;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    display: flex;
+    position: relative;
+    padding: 20px;
+    gap: 20px;
+    height: calc(100vh - 64px - 80px);
+    overflow: hidden;
+}
+/* Info box */
+.info-box {
+    width: 320px;
+    background: rgba(246, 234, 208, 0.95);
+    border: 6px solid #5b341f;
+    border-radius: 12px;
+    padding: 20px;
+    color: #49352b;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    align-self: flex-start;
+}
+.info-box h2 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    font-weight: 800;
+    color: #5b341f;
+    border-bottom: 2px dashed #b07a3a;
+    padding-bottom: 6px;
+}
+.info-box p {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+/* Progress Box */
+.progress-box {
+    background: rgba(247, 238, 221, 0.95);
+    border: 5px solid #a67843;
+    padding: 12px 18px;
+    border-radius: 10px;
+    color: #49352b;
+    font-weight: 800;
+    font-size: 0.95rem;
+    margin-top: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.progress-box strong {
+    color: #2f6b2f;
+    font-size: 1.1rem;
+}
+/* House Area Container */
+.house-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+.house-area {
+    position: relative;
+    width: 100%;
+    max-width: 760px;
+    aspect-ratio: 760 / 600;
+    background: transparent;
+}
+.house-area img.rumah-bg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    pointer-events: none;
+}
+#cableCanvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+}
+/* Component Node & Terminals */
+.component-node {
+    position: absolute;
+    z-index: 20;
+}
+.component-image-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.component-image {
+    max-width: 85%;
+    max-height: 85%;
+    object-fit: contain;
+    pointer-events: none;
+}
+.component-name {
+    margin-top: 2px;
+    font-size: 10px;
+    font-weight: 800;
+    color: white;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,.8);
+    background: rgba(75, 45, 29, 0.85);
+    padding: 1px 4px;
+    border-radius: 3px;
+    pointer-events: none;
+}
+.terminal {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    position: absolute;
+    border: 3px solid white;
+    cursor: pointer;
+    z-index: 999;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    transition: all 0.15s ease;
+}
+.terminal:hover {
+    transform: scale(1.25);
+}
+.positive {
+    background: #ff3131;
+    top: -6px;
+    left: -6px;
+}
+.negative {
+    background: #111;
+    bottom: -6px;
+    right: -6px;
+}
+.terminal.selected {
+    box-shadow: 0 0 15px 5px #ffd54f;
+    border-color: #ffd54f;
+    animation: pulse 1s infinite alternate;
+}
+.terminal.connected {
+    box-shadow: 0 0 15px 5px #8bc34a;
+    border-color: #8bc34a;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.2); }
+}
+/* Control buttons at the bottom */
+.bottom-bar {
+    width: 100%;
+    height: 80px;
+    background: rgba(75, 45, 29, 0.9);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+.btn {
+    width: 180px;
+    height: 48px;
+    border: none;
+    background: #b07a3a;
+    color: white;
+    font-size: 15px;
+    font-weight: 800;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn:hover:not(:disabled) {
+    background: #c58c48;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+.btn.cek {
+    background: #5f7c2f;
+}
+.btn.cek:hover:not(:disabled) {
+    background: #6e9036;
+}
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+/* Small info card toast */
+.info-card {
+    position: absolute;
+    z-index: 200;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100px;
+    background: #fffdf6;
+    border: 5px solid #d0b07a;
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: #3b2d22;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    min-width: 250px;
+    text-align: center;
+    display: none;
+}
+.info-card p { font-size: 13px; font-weight: 700; }
+/* Modals */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+}
+.modal.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+.modal-content {
+    width: min(480px, 90vw);
+    background: #fffdf6;
+    border: 8px solid #d0b07a;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.35);
+    color: #3b2d22;
+    animation: zoomIn 0.3s ease-out;
+}
+@keyframes zoomIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+.modal-content h3 {
+    margin-bottom: 14px;
+    font-size: 1.25rem;
+    color: #5b341f;
+    border-bottom: 2px dashed #d0b07a;
+    padding-bottom: 8px;
+}
+.modal-content p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+.modal-content button {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: #b07a3a;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: background 0.2s ease;
+}
+.modal-content button:hover {
+    background: #c58c48;
+}
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+    .main-content {
+        padding: 15px;
+        gap: 15px;
+    }
+    .info-box {
+        width: 240px;
+        padding: 14px;
+    }
+    .info-box h2 { font-size: 1.1rem; }
+    .info-box p { font-size: 0.85rem; }
+    .progress-box { padding: 8px 12px; font-size: 0.85rem; margin-top: 10px; }
+    .house-area {
+        max-width: 580px;
+    }
+}
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+        height: auto;
+    }
+    .wrapper {
+        height: auto;
+        min-height: 100vh;
+        justify-content: flex-start;
+    }
+    .main-content {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+        padding: 12px;
+        gap: 12px;
+    }
+    .info-box {
+        width: 100%;
+        align-self: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .info-box h2 { border-bottom: none; margin-bottom: 0; padding-bottom: 0; font-size: 1rem; }
+    .info-box p { font-size: 0.85rem; max-width: 60%; }
+    .progress-box { margin-top: 0; padding: 6px 12px; }
+    .house-container {
+        width: 100%;
+        margin: 10px 0;
+    }
+    .house-area {
+        width: 95vw;
+        max-width: 500px;
+    }
+    .bottom-bar {
+        position: sticky;
+        bottom: 0;
+        height: 60px;
+        padding: 0 16px;
+    }
+    .btn {
+        width: 130px;
+        height: 38px;
+        font-size: 13px;
+    }
+}
+@media (max-width: 480px) {
+    .info-box {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .info-box p { max-width: 100%; }
+    .progress-box { width: 100%; text-align: center; }
+    .house-area {
+        width: 98vw;
+    }
+    .bottom-bar {
+        padding: 0 10px;
+    }
+    .btn {
+        width: 110px;
+        height: 36px;
+        font-size: 12px;
+    }
+    .terminal {
+        width: 16px;
+        height: 16px;
+        border-width: 2px;
+    }
+    .component-name {
+        font-size: 8px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="top-wood">
+        <div class="title">Langkah 2 dari 5</div>
+        <div class="subtitle">HUBUNGKAN KABEL</div>
+    </div>
+    <div class="main-content">
+        <div class="info-box">
+            <div>
+                <h2>PETUNJUK</h2>
+                <p>Hubungkan kabel sesuai urutan berikut: Panel Surya → MCB → SPD → SCC → Baterai → Inverter → Lampu.</p>
+            </div>
+            <div class="progress-box" id="progress">Terhubung: <strong id="count">0</strong>/6</div>
+        </div>
+        <div class="house-container">
+            <div class="house-area" id="house">
+                <img src="/assets/rumah/rumah_dalam.png" class="rumah-bg" alt="Rumah Aceh">
+                <canvas id="cableCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-bar">
+        <button class="btn petunjuk" id="hintBtn">PETUNJUK</button>
+        <button class="btn cek" id="cekBtn" disabled>CEK SISTEM</button>
+    </div>
+    <div id="infoCard" class="info-card"><p></p></div>
+</div>
+<script>
+function playTone(context, frequency, duration, type='sine'){
+    try{
+        const o = context.createOscillator();
+        const g = context.createGain();
+        o.type = type; o.frequency.value = frequency;
+        o.connect(g); g.connect(context.destination);
+        o.start(); g.gain.setValueAtTime(0.0001, context.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.2, context.currentTime+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, context.currentTime+duration);
+        o.stop(context.currentTime+duration+0.02);
+    }catch(e){ }
+}
+const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+const countEl = document.getElementById('count');
+const cekBtn = document.getElementById('cekBtn');
+const hintBtn = document.getElementById('hintBtn');
+const infoCard = document.getElementById('infoCard');
+const house = document.getElementById('house');
+const cableCanvas = document.getElementById('cableCanvas');
+const ctx = cableCanvas.getContext('2d');
+const order = ['panel','mcb','spd','scc','battery','inverter','lamp'];
+const connections = [];
+let selectedTerminal = null;
+// Consistent percentage positions with Langkah 1
+const componentSpecs = [
+    { name:'panel', label:'Panel Surya', img:'/assets/component/panel surya.png', style: 'width: 22%; height: 14%; top: 12%; left: 50%; transform: translateX(-50%);' },
+    { name:'lamp', label:'Lampu', img:'/assets/component/lampu_off.png', style: 'width: 10%; height: 15%; top: 34%; left: 50%; transform: translateX(-50%);' },
+    { name:'scc', label:'SCC', img:'/assets/component/SCC.png', style: 'width: 15%; height: 12%; top: 54%; left: 50%; transform: translateX(-50%);' },
+    { name:'mcb', label:'MCB', img:'/assets/component/DC mcb.png', style: 'width: 9%; height: 10%; top: 54%; left: 64%;' },
+    { name:'spd', label:'SPD', img:'/assets/component/SPD.png', style: 'width: 9%; height: 10%; top: 54%; left: 74%;' },
+    { name:'battery', label:'Baterai', img:'/assets/component/BATERAI.png', style: 'width: 16%; height: 12%; top: 72%; left: 36%;' },
+    { name:'inverter', label:'Inverter', img:'/assets/component/INVERTER.png', style: 'width: 15%; height: 12%; top: 72%; left: 56%;' }
+];
+function createComponents(){
+    componentSpecs.forEach(comp=>{
+        const el = document.createElement('div');
+        el.className = 'component-node';
+        el.style.cssText = el.style.cssText + comp.style;
+        el.innerHTML = `
+            <div class="component-image-wrap">
+                <img src="${comp.img}" class="component-image" alt="${comp.label}">
+                <div class="terminal positive" data-node="${comp.name}-plus"></div>
+                <div class="terminal negative" data-node="${comp.name}-minus"></div>
+                <div class="component-name">${comp.label}</div>
+            </div>
+        `;
+        house.appendChild(el);
+    });
+}
+function resizeCanvas(){
+    cableCanvas.width = house.clientWidth;
+    cableCanvas.height = house.clientHeight;
+    redrawConnections();
+}
+window.addEventListener('resize', resizeCanvas);
+function drawLine(fromNode, toNode, index){
+    const fromRect = fromNode.getBoundingClientRect();
+    const toRect = toNode.getBoundingClientRect();
+    const baseRect = house.getBoundingClientRect();
+    
+    const fromX = fromRect.left - baseRect.left + fromRect.width / 2;
+    const fromY = fromRect.top - baseRect.top + fromRect.height / 2;
+    const toX = toRect.left - baseRect.left + toRect.width / 2;
+    const toY = toRect.top - baseRect.top + toRect.height / 2;
+    
+    // Positive is Red, Negative is Black
+    const isPositive = fromNode.classList.contains('positive');
+    ctx.strokeStyle = isPositive ? '#ff3b30' : '#222';
+    ctx.lineWidth = window.innerWidth < 480 ? 4 : 6;
+    ctx.lineCap = 'round';
+    
+    // Draw a curved line
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    const midX = (fromX + toX) / 2;
+    const midY = (fromY + toY) / 2;
+    ctx.quadraticCurveTo(midX, midY + 15, toX, toY);
+    ctx.stroke();
+}
+function redrawConnections(){
+    ctx.clearRect(0,0,cableCanvas.width,cableCanvas.height);
+    connections.forEach((conn,index)=>{
+        const from = document.querySelector(`[data-node="${conn.from}"]`);
+        const to = document.querySelector(`[data-node="${conn.to}"]`);
+        if(from && to) drawLine(from,to,index);
+    });
+}
+function showFeedback(message, type){
+    const p = infoCard.querySelector('p');
+    p.textContent = message;
+    infoCard.style.display = 'block';
+    infoCard.style.background = type === 'success' ? '#eaf7e7' : '#fdecea';
+    infoCard.style.borderColor = type === 'success' ? '#8bc34a' : '#e74c3c';
+    infoCard.style.color = type === 'success' ? '#30572d' : '#7a1f1f';
+    setTimeout(()=>{ infoCard.style.display = 'none'; }, 1600);
+}
+function updateProgress(){
+    countEl.textContent = connections.length;
+    if(connections.length === 6){
+        cekBtn.disabled = false;
+    }
+}
+function connectTerminal(from,to){
+    if(connections.length >= 6) return;
+    
+    connections.push({
+        from: from.dataset.node,
+        to: to.dataset.node
+    });
+    
+    from.classList.add('connected');
+    to.classList.add('connected');
+    
+    playTone(audioCtx, 680, 0.14, 'triangle');
+    updateProgress();
+    redrawConnections();
+}
+function selectTerminal(node){
+    if(node.classList.contains('connected')) return;
+    
+    if(selectedTerminal === node){
+        node.classList.remove('selected');
+        selectedTerminal = null;
+        return;
+    }
+    
+    if(!selectedTerminal){
+        selectedTerminal = node;
+        node.classList.add('selected');
+        return;
+    }
+    
+    const fromName = selectedTerminal.dataset.node.split('-')[0];
+    const toName = node.dataset.node.split('-')[0];
+    
+    // Enforce correct polarities connecting (Positive-to-Positive or Negative-to-Negative is typical, or here any polarity to respect simplified model)
+    const fromIndex = order.indexOf(fromName);
+    const toIndex = order.indexOf(toName);
+    
+    selectedTerminal.classList.remove('selected');
+    
+    if(toIndex === fromIndex + 1){
+        connectTerminal(selectedTerminal, node);
+    } else {
+        showFeedback('✗ Urutan kabel salah', 'error');
+        playTone(audioCtx, 160, 0.2, 'square');
+    }
+    selectedTerminal = null;
+}
+function openHintModal(){
+    const modal = document.createElement('div');
+    modal.className = 'modal open';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>PETUNJUK KONEKSI KABEL</h3>
+            <p>Ikuti aliran sirkuit berikut:</p>
+            <p>1. <strong>Panel Surya → MCB</strong> (Sisi proteksi awal)</p>
+            <p>2. <strong>MCB → SPD</strong> (Proteksi sambaran petir)</p>
+            <p>3. <strong>SPD → SCC</strong> (Solar Charge Controller)</p>
+            <p>4. <strong>SCC → Baterai</strong> (Pengisian daya baterai)</p>
+            <p>5. <strong>Baterai → Inverter</strong> (Mengubah listrik ke AC)</p>
+            <p>6. <strong>Inverter → Lampu</strong> (Beban listrik AC)</p>
+            <button id="closeHint">TUTUP</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#closeHint').addEventListener('click', ()=> modal.remove());
+}
+function openSuccessModal(){
+    const modal = document.createElement('div');
+    modal.className = 'modal open';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>SISTEM BERHASIL DIHUBUNGKAN!</h3>
+            <p>Instalasi kabel PLTS Anda telah selesai dan terhubung sesuai urutan kelistrikan yang benar.</p>
+            <p>Klik tombol di bawah untuk lanjut menguji sistem kelistrikan.</p>
+            <button id="nextBtn">LANJUT</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#nextBtn').addEventListener('click', ()=> window.location.href = 'langkah3.html');
+}
+function init(){
+    createComponents();
+    // small timeout to ensure DOM renders before sizing canvas
+    setTimeout(resizeCanvas, 100);
+    
+    countEl.textContent = 0;
+    cekBtn.disabled = true;
+    
+    hintBtn.addEventListener('click', openHintModal);
+    cekBtn.addEventListener('click', ()=> {
+        if(connections.length >= 6){
+            const lampImg = document.querySelector('img[src*="lampu_off"]');
+            if(lampImg){
+                lampImg.src = '/assets/component/lampu_on.png';
+                lampImg.style.filter = 'drop-shadow(0 0 20px #ffeb3b)';
+            }
+            openSuccessModal();
+        }
+    });
+    
+    document.addEventListener('click', (e)=>{
+        if(e.target.classList.contains('terminal')) selectTerminal(e.target);
+    });
+}
+init();
+</script>
+</body>
+</html>

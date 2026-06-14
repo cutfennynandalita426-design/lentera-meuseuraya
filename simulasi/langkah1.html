@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi PLTS - Langkah 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: url('/assets/background/simulasi_bg.png') center/cover no-repeat;
+    background-color: #3e2723;
+    display: flex;
+    flex-direction: column;
+}
+.wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+/* Top wood/header */
+.top-wood {
+    width: 100%;
+    height: 64px;
+    background: #4b2d1d;
+    box-shadow: 0 6px 14px rgba(0,0,0,.35);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 100;
+}
+.top-wood .title {
+    color: #f6ecd9;
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+.top-wood .subtitle {
+    color: #f6ecd9;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    display: flex;
+    position: relative;
+    padding: 20px;
+    gap: 20px;
+    height: calc(100vh - 64px - 80px);
+    overflow: hidden;
+}
+/* Info box */
+.info-box {
+    width: 320px;
+    background: rgba(246, 234, 208, 0.95);
+    border: 6px solid #5b341f;
+    border-radius: 12px;
+    padding: 20px;
+    color: #49352b;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    align-self: flex-start;
+}
+.info-box h2 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    font-weight: 800;
+    color: #5b341f;
+    border-bottom: 2px dashed #b07a3a;
+    padding-bottom: 6px;
+}
+.info-box p {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+/* Progress Box */
+.progress-box {
+    background: rgba(247, 238, 221, 0.95);
+    border: 5px solid #a67843;
+    padding: 12px 18px;
+    border-radius: 10px;
+    color: #49352b;
+    font-weight: 800;
+    font-size: 0.95rem;
+    margin-top: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.progress-box span {
+    color: #2f6b2f;
+    font-size: 1.1rem;
+}
+/* House Area Container */
+.house-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+.house-area {
+    position: relative;
+    width: 100%;
+    max-width: 760px;
+    aspect-ratio: 760 / 600;
+    background: transparent;
+}
+.house-area img.rumah-bg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+/* Slot base and silhouettes */
+.slot {
+    position: absolute;
+    z-index: 12;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+}
+.slot .silhouette {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px dashed rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s ease;
+    cursor: pointer;
+}
+.slot.highlight .silhouette {
+    box-shadow: 0 0 20px 6px rgba(212, 175, 55, 0.55);
+    background: rgba(212, 175, 55, 0.08);
+    border-color: rgba(212, 175, 55, 0.5);
+}
+.slot.correct-hover .silhouette {
+    outline: 4px solid rgba(88,166,90,0.95);
+    background: rgba(88,166,90,0.15);
+}
+.slot.incorrect .silhouette {
+    animation: shake .5s;
+    outline: 4px solid rgba(255,59,48,0.8);
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-4px); }
+}
+.slot.filled .silhouette {
+    display: none;
+}
+.slot .label {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: #f6ead0;
+    font-weight: 700;
+    background: rgba(75, 45, 29, 0.85);
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+/* Percentage placement for Slots */
+.slot[data-name="panel"] { width: 22%; height: 14%; top: 12%; left: 50%; transform: translateX(-50%); }
+.slot[data-name="lamp"] { width: 10%; height: 15%; top: 34%; left: 50%; transform: translateX(-50%); }
+.slot[data-name="scc"] { width: 15%; height: 12%; top: 54%; left: 50%; transform: translateX(-50%); }
+.slot[data-name="mcb"] { width: 9%; height: 10%; top: 54%; left: 64%; }
+.slot[data-name="spd"] { width: 9%; height: 10%; top: 54%; left: 74%; }
+.slot[data-name="battery"] { width: 16%; height: 12%; top: 72%; left: 36%; }
+.slot[data-name="inverter"] { width: 15%; height: 12%; top: 72%; left: 56%; }
+/* Component panel on the right */
+.component-panel {
+    width: 200px;
+    height: 100%;
+    background: rgba(246, 234, 208, 0.95);
+    border: 6px solid #5b341f;
+    border-radius: 12px;
+    padding: 16px 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+.component-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.4);
+    padding: 8px;
+    border-radius: 8px;
+    width: 100%;
+    border: 2px solid transparent;
+    transition: all 0.15s ease;
+}
+.component-item:hover {
+    background: rgba(255,255,255,0.8);
+    border-color: #b07a3a;
+    transform: translateY(-2px);
+}
+.component-item img {
+    width: 65px;
+    height: 65px;
+    object-fit: contain;
+    cursor: grab;
+    transition: transform 0.15s ease;
+}
+.component-item img:active {
+    cursor: grabbing;
+}
+.component-item span {
+    font-size: 11px;
+    font-weight: 800;
+    color: #49352b;
+    text-align: center;
+}
+.component-item[draggable="true"] { user-select: none; }
+/* Control buttons at the bottom */
+.bottom-bar {
+    width: 100%;
+    height: 80px;
+    background: rgba(75, 45, 29, 0.9);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+.btn {
+    width: 180px;
+    height: 48px;
+    border: none;
+    background: #b07a3a;
+    color: white;
+    font-size: 15px;
+    font-weight: 800;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn:hover:not(:disabled) {
+    background: #c58c48;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+.btn.cek {
+    background: #5f7c2f;
+}
+.btn.cek:hover:not(:disabled) {
+    background: #6e9036;
+}
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+/* Small info card toast */
+.info-card {
+    position: absolute;
+    z-index: 200;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100px;
+    background: #fffdf6;
+    border: 5px solid #d0b07a;
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: #3b2d22;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    min-width: 250px;
+    text-align: center;
+    animation: fadeInUp 0.3s ease;
+}
+.info-card h4 { font-size: 14px; margin-bottom: 4px; color: #5b341f; }
+.info-card p { font-size: 12px; font-weight: 600; }
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+/* placed item styling inside slot */
+.placed {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    animation: pop .3s ease-out;
+}
+.placed img {
+    max-width: 85%;
+    max-height: 85%;
+    object-fit: contain;
+}
+@keyframes pop {
+    0% { transform: scale(.4); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+/* hint state */
+.house-area.show-hints .silhouette {
+    background: rgba(212, 175, 55, 0.15);
+    border: 2px dashed rgba(212, 175, 55, 0.8);
+    box-shadow: 0 0 10px rgba(212,175,55,0.3);
+}
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+    .main-content {
+        padding: 15px;
+        gap: 15px;
+    }
+    .info-box {
+        width: 240px;
+        padding: 14px;
+    }
+    .info-box h2 { font-size: 1.1rem; }
+    .info-box p { font-size: 0.85rem; }
+    .progress-box { padding: 8px 12px; font-size: 0.85rem; margin-top: 10px; }
+    .component-panel {
+        width: 160px;
+        gap: 10px;
+    }
+    .component-item { padding: 6px; }
+    .component-item img { width: 50px; height: 50px; }
+    .component-item span { font-size: 10px; }
+    .house-area {
+        max-width: 580px;
+    }
+}
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+        height: auto;
+    }
+    .wrapper {
+        height: auto;
+        min-height: 100vh;
+        justify-content: flex-start;
+    }
+    .main-content {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+        padding: 12px;
+        gap: 12px;
+    }
+    .info-box {
+        width: 100%;
+        align-self: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .info-box h2 { border-bottom: none; margin-bottom: 0; padding-bottom: 0; font-size: 1rem; }
+    .info-box p { font-size: 0.85rem; max-width: 60%; }
+    .progress-box { margin-top: 0; padding: 6px 12px; }
+    .house-container {
+        width: 100%;
+        margin: 10px 0;
+    }
+    .house-area {
+        width: 95vw;
+        max-width: 500px;
+    }
+    .component-panel {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        padding: 10px;
+        gap: 12px;
+    }
+    .component-item {
+        display: inline-flex;
+        width: 90px;
+        flex-shrink: 0;
+    }
+    .bottom-bar {
+        position: sticky;
+        bottom: 0;
+        height: 60px;
+        padding: 0 16px;
+    }
+    .btn {
+        width: 130px;
+        height: 38px;
+        font-size: 13px;
+    }
+}
+@media (max-width: 480px) {
+    .info-box {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .info-box p { max-width: 100%; }
+    .progress-box { width: 100%; text-align: center; }
+    .house-area {
+        width: 98vw;
+    }
+    .bottom-bar {
+        padding: 0 10px;
+    }
+    .btn {
+        width: 110px;
+        height: 36px;
+        font-size: 12px;
+    }
+    .slot .label {
+        font-size: 9px;
+        bottom: -15px;
+        padding: 1px 4px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="top-wood">
+        <div class="title">Langkah 1 dari 5</div>
+        <div class="subtitle">PASANG KOMPONEN</div>
+    </div>
+    <div class="main-content">
+        <!-- Left info card -->
+        <div class="info-box">
+            <div>
+                <h2>PASANG KOMPONEN</h2>
+                <p>Tempatkan setiap komponen PLTS pada posisi yang sesuai di Rumah Aceh.</p>
+            </div>
+            <div class="progress-box" id="progress">Terpasang: <span id="count">0</span>/7</div>
+        </div>
+        <!-- Center house area -->
+        <div class="house-container">
+            <div class="house-area" id="house">
+                <img src="/assets/rumah/rumah_luar.png" class="rumah-bg" alt="Rumah Aceh">
+                <div class="slot" data-name="panel" data-accept="panel">
+                    <div class="silhouette">
+                        <svg width="80%" height="70%" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="4" y="8" width="192" height="44" rx="4" ry="4" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="label">Panel Surya</div>
+                </div>
+                <div class="slot" data-name="lamp" data-accept="lamp">
+                    <div class="silhouette">
+                        <svg width="60%" height="80%" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M30 10c-8 0-14 7-14 15 0 8 6 14 10 18v20h8V43c4-4 10-10 10-18 0-8-6-15-14-15z" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                        </svg>
+                    </div>
+                    <div class="label">Lampu</div>
+                </div>
+                <div class="slot" data-name="scc" data-accept="scc">
+                    <div class="silhouette">
+                        <svg width="70%" height="70%" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="14" width="84" height="52" rx="6" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="label">SCC</div>
+                </div>
+                <div class="slot" data-name="mcb" data-accept="mcb">
+                    <div class="silhouette">
+                        <svg width="80%" height="80%" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="6" y="6" width="48" height="68" rx="6" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="label">MCB</div>
+                </div>
+                <div class="slot" data-name="spd" data-accept="spd">
+                    <div class="silhouette">
+                        <svg width="80%" height="80%" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="30" cy="30" r="22" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="label">SPD</div>
+                </div>
+                <div class="slot" data-name="battery" data-accept="battery">
+                    <div class="silhouette">
+                        <svg width="80%" height="80%" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="6" y="10" width="100" height="60" rx="8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+                            <rect x="106" y="28" width="8" height="24" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)"/>
+                        </svg>
+                    </div>
+                    <div class="label">Baterai</div>
+                </div>
+                <div class="slot" data-name="inverter" data-accept="inverter">
+                    <div class="silhouette">
+                        <svg width="80%" height="70%" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="6" y="10" width="88" height="60" rx="6" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="label">Inverter</div>
+                </div>
+            </div>
+        </div>
+        <!-- Right draggable list -->
+        <div class="component-panel" id="components">
+            <div class="component-item" draggable="true" data-type="panel">
+                <img src="/assets/component/panel surya.png" alt="Panel Surya">
+                <span>Panel Surya</span>
+            </div>
+            <div class="component-item" draggable="true" data-type="lamp">
+                <img src="/assets/component/lampu_off.png" alt="Lampu">
+                <span>Lampu</span>
+            </div>
+            <div class="component-item" draggable="true" data-type="scc">
+                <img src="/assets/component/SCC.png" alt="SCC">
+                <span>SCC</span>
+            </div>
+            <div class="component-item" draggable="true" data-type="mcb">
+                <img src="/assets/component/DC mcb.png" alt="MCB">
+                <span>MCB</span>
+            </div>
+            <div class="component-item" draggable="true" data-type="spd">
+                <img src="/assets/component/SPD.png" alt="SPD">
+                <span>SPD</span>
+            </div>
+            <div class="component-item" draggable="true" data-type="battery">
+                <img src="/assets/component/BATERAI.png" alt="Baterai">
+                <span>Baterai</span>
+            </div>
+            <div class="component-item" draggable="true" data-type="inverter">
+                <img src="/assets/component/INVERTER.png" alt="Inverter">
+                <span>Inverter</span>
+            </div>
+        </div>
+    </div>
+    <!-- Bottom navigation buttons -->
+    <div class="bottom-bar">
+        <button class="btn petunjuk" id="hintBtn">PETUNJUK</button>
+        <button class="btn cek" id="cekBtn" disabled>CEK POSISI</button>
+    </div>
+    <div id="infoCard" class="info-card" style="display:none"></div>
+</div>
+<script>
+// WebAudio tone generator fallback
+function playTone(context, frequency, duration, type='sine'){
+    try{
+        const o = context.createOscillator();
+        const g = context.createGain();
+        o.type = type; o.frequency.value = frequency;
+        o.connect(g); g.connect(context.destination);
+        o.start(); g.gain.setValueAtTime(0.0001, context.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.2, context.currentTime+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, context.currentTime+duration);
+        o.stop(context.currentTime+duration+0.02);
+    }catch(e){ }
+}
+const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+const components = document.querySelectorAll('.component-item');
+const slots = Array.from(document.querySelectorAll('.slot'));
+const house = document.getElementById('house');
+const progressCount = document.getElementById('count');
+const cekBtn = document.getElementById('cekBtn');
+const hintBtn = document.getElementById('hintBtn');
+const infoCard = document.getElementById('infoCard');
+components.forEach(item=>{
+    item.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', item.dataset.type);
+        slots.forEach(s=>{
+            if(s.dataset.accept === item.dataset.type && !s.classList.contains('filled')){
+                s.classList.add('highlight');
+            }
+        });
+    });
+    item.addEventListener('dragend', ()=>{ 
+        slots.forEach(s=>s.classList.remove('highlight','correct-hover')); 
+    });
+});
+house.addEventListener('dragover', e=>{ e.preventDefault(); });
+house.addEventListener('dragenter', e=>{ e.preventDefault(); });
+house.addEventListener('drop', e=>{
+    e.preventDefault();
+    const type = e.dataTransfer.getData('text/plain');
+    const rect = house.getBoundingClientRect();
+    const x = e.clientX - rect.left; 
+    const y = e.clientY - rect.top;
+    
+    // Find slot under drag coordinates
+    const target = slots.find(s=>{
+        const r = s.getBoundingClientRect();
+        const rx = r.left - rect.left; 
+        const ry = r.top - rect.top;
+        return x >= rx && x <= rx + r.width && y >= ry && y <= ry + r.height;
+    });
+    
+    if(!target){
+        playTone(audioCtx,200,0.12,'sine');
+        return;
+    }
+    
+    const accept = target.dataset.accept;
+    if(target.classList.contains('filled')){
+        indicateError(target,'Slot sudah terisi');
+        return;
+    }
+    
+    if(accept === type){
+        const dragged = Array.from(components).find(c=>c.dataset.type===type && !c.classList.contains('used'));
+        if(!dragged) return;
+        placeComponentIntoSlot(dragged,target,type);
+    }else{
+        indicateError(target,'✗ Komponen tidak sesuai');
+    }
+    slots.forEach(s=>s.classList.remove('highlight','correct-hover'));
+});
+// Show hover visual cues during drag over slot
+house.addEventListener('dragover', e=>{
+    const rect = house.getBoundingClientRect();
+    const x = e.clientX - rect.left; 
+    const y = e.clientY - rect.top;
+    slots.forEach(s=>{
+        const r = s.getBoundingClientRect();
+        const rx = r.left - rect.left; 
+        const ry = r.top - rect.top;
+        if(x >= rx && x <= rx + r.width && y >= ry && y <= ry + r.height && !s.classList.contains('filled')){
+            s.classList.add('correct-hover');
+        }else{ 
+            s.classList.remove('correct-hover'); 
+        }
+    });
+});
+function placeComponentIntoSlot(dragged,slot,type){
+    const img = dragged.querySelector('img');
+    const placedWrap = document.createElement('div');
+    placedWrap.className='placed';
+    const placedImg = document.createElement('img');
+    placedImg.src = img.src;
+    placedImg.alt = dragged.querySelector('span').innerText;
+    placedWrap.appendChild(placedImg);
+    slot.appendChild(placedWrap);
+    
+    const sil = slot.querySelector('.silhouette');
+    if(sil) sil.style.opacity = '0'; // hide silhouette instead of removing to maintain size
+    slot.classList.add('filled');
+    dragged.classList.add('used');
+    dragged.setAttribute('draggable','false');
+    dragged.style.opacity='.3';
+    playTone(audioCtx,880,0.15,'sine');
+    showInfoCard(placedImg.alt);
+    incrementProgress();
+}
+function indicateError(slot,msg){
+    slot.classList.add('incorrect');
+    playTone(audioCtx,160,0.2,'square');
+    setTimeout(()=>slot.classList.remove('incorrect'),500);
+    
+    // Toast error position near the slot
+    const slotRect = slot.getBoundingClientRect();
+    const bodyRect = document.body.getBoundingClientRect();
+    
+    const toast = document.createElement('div'); 
+    toast.className='info-card'; 
+    toast.style.position = 'absolute';
+    toast.style.left = (slotRect.left + slotRect.width/2) + 'px';
+    toast.style.top = (slotRect.top - 70) + 'px';
+    toast.style.transform = 'translateX(-50%)'; 
+    toast.style.border = '4px solid #f44336';
+    toast.innerText = msg; 
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(),1000);
+}
+function showInfoCard(name){
+    const info = {
+        'Panel Surya':'Mengubah energi matahari menjadi listrik DC.',
+        'Lampu':'Memberi penerangan di area dalam rumah.',
+        'SCC':'Mengatur pengisian baterai agar tidak overcharging.',
+        'MCB':'Perlindungan sirkuit pada sisi DC/AC.',
+        'SPD':'Perlindungan terhadap lonjakan tegangan (surge).',
+        'Baterai':'Menyimpan energi untuk digunakan saat malam hari.',
+        'Inverter':'Mengubah listrik DC menjadi AC untuk peralatan rumah.'
+    };
+    infoCard.innerHTML = '<h4>'+name+'</h4><p>'+ (info[name] || '') +'</p>';
+    infoCard.style.display='block';
+    setTimeout(()=>infoCard.style.display='none',3200);
+}
+function incrementProgress(){
+    const filled = document.querySelectorAll('.slot.filled').length;
+    progressCount.textContent = filled;
+    if(filled === 7){
+        cekBtn.disabled = false;
+        cekBtn.onclick = () => {
+            window.location.href = 'langkah2.html';
+        };
+    }
+}
+// Hint button briefly highlights slot placeholders
+hintBtn.addEventListener('click', ()=>{
+    house.classList.add('show-hints');
+    setTimeout(()=>house.classList.remove('show-hints'),3000);
+});
+// Click fallback for accessibility / mobile
+components.forEach(c=>{
+    c.addEventListener('click', ()=>{
+        const type = c.dataset.type; 
+        if(c.classList.contains('used')) return;
+        const target = slots.find(s=>s.dataset.accept===type && !s.classList.contains('filled'));
+        if(target) {
+            placeComponentIntoSlot(c,target,type);
+        } else {
+            indicateError(slots[0],'Tidak ada slot kosong untuk komponen ini');
+        }
+    });
+});
+progressCount.innerText = 0;
+</script>
+</body>
+</html>

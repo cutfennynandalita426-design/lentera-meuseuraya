@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Perakitan - Lentera Meuseuraya</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+            <main class="main-content">
+                <div class="background-rumah">
+                    <img src="assets/background_rumah_aceh.svg" alt="Rumah Aceh">
+                </div>
+
+                <div class="header-section">
+                    <h1 class="main-title">SIMULASI PERAKITAN</h1>
+                    <p class="subtitle">Pasang dan Hubungkan Sistem Panel Surya pada Rumah Aceh</p>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="goToScreen('screen2')">MULAI SIMULASI</button>
+                    <button class="btn btn-secondary" onclick="goToScreen('screen2')">PETUNJUK</button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: Misi dan Petunjuk -->
+    <div id="screen2" class="screen">
+        <div class="page-content">
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item">Beranda</a>
+                    <a href="#" class="nav-item">Materi</a>
+                    <a href="#" class="nav-item active">Simulasi</a>
+                    <a href="#" class="nav-item">LKPD</a>
+                    <a href="#" class="nav-item">Profil</a>
+                </nav>
+            </aside>
+
+            <main class="main-content">
+                <div class="background-rumah">
+                    <img src="assets/background_rumah_aceh.svg" alt="Rumah Aceh">
+                </div>
+
+                <div class="parchment-panel">
+                    <h2 class="parchment-title">MISI PRAKTIKUM</h2>
+                    <p class="parchment-text">
+                        Rumah Aceh membutuhkan sumber energi listrik yang ramah lingkungan.
+                    </p>
+                    <p class="parchment-text">
+                        Tugasmu adalah merakit dan menghubungkan sistem panel surya agar lampu di rumah dapat menyala.
+                    </p>
+                    <p class="parchment-text">
+                        Ikuti langkah-langkah dan hubungkan setiap komponen dengan benar.
+                    </p>
+
+                    <div class="guide-character">
+                        <div class="character-icon">🎓</div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="goToScreen('screen3')">MULAI</button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: Input Nama -->
+    <div id="screen3" class="screen">
+        <div class="modal-overlay">
+            <div class="modal-window">
+                <h2 class="modal-title">Sebelum Memulai</h2>
+                <p class="modal-text">Masukkan namamu terlebih dahulu</p>
+
+                <input type="text" id="studentName" class="input-field" placeholder="Nama siswa" maxlength="50">
+
+                <button class="btn btn-primary" onclick="startSimulation()">MULAI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: Langkah 1 - Pasang Komponen -->
+    <div id="screen4" class="screen">
+        <div class="simulation-container">
+            <div class="sim-header">
+                <h2>LANGKAH 1 DARI 5</h2>
+                <p class="sim-instruction">Pasang semua komponen pada posisi yang tepat.</p>
+            </div>
+
+            <div class="sim-content">
+                <div class="sim-main">
+                    <div class="rumah-display">
+                        <img src="assets/background_rumah_aceh.png" alt="Rumah Aceh" class="rumah-image">
+
+                        <!-- Drop zones for components -->
+                        <div class="drop-zones">
+                            <div class="drop-zone" id="zone-panel-surya" data-component="panel-surya">
+                                <div class="zone-silhouette panel-surya-silhouette"></div>
+                                <span class="zone-label">Panel Surya</span>
+                            </div>
+                            <div class="drop-zone" id="zone-scc" data-component="scc">
+                                <div class="zone-silhouette scc-silhouette"></div>
+                                <span class="zone-label">SCC</span>
+                            </div>
+                            <div class="drop-zone" id="zone-baterai" data-component="baterai">
+                                <div class="zone-silhouette baterai-silhouette"></div>
+                                <span class="zone-label">Baterai</span>
+                            </div>
+                            <div class="drop-zone" id="zone-inverter" data-component="inverter">
+                                <div class="zone-silhouette inverter-silhouette"></div>
+                                <span class="zone-label">Inverter</span>
+                            </div>
+                            <div class="drop-zone" id="zone-lampu" data-component="lampu">
+                                <div class="zone-silhouette lampu-silhouette"></div>
+                                <span class="zone-label">Lampu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="component-panel">
+                    <h3>KOMPONEN</h3>
+                    <div class="components-list">
+                        <div class="draggable-component" draggable="true" data-component="panel-surya">
+                            <div class="component-icon panel-surya-icon">☀️</div>
+                            <span>Panel Surya</span>
+                        </div>
+                        <div class="draggable-component" draggable="true" data-component="scc">
+                            <div class="component-icon scc-icon">🔌</div>
+                            <span>SCC</span>
+                        </div>
+                        <div class="draggable-component" draggable="true" data-component="baterai">
+                            <div class="component-icon baterai-icon">
+                                <img src="assets/BATERAI.svg" alt="Baterai">
+                            </div>
+                            <span>Baterai</span>
+                        </div>
+                        <div class="draggable-component" draggable="true" data-component="inverter">
+                            <div class="component-icon inverter-icon">
+                                <img src="assets/INVERTER.svg" alt="Inverter">
+                            </div>
+                            <span>Inverter</span>
+                        </div>
+                        <div class="draggable-component" draggable="true" data-component="lampu">
+                            <div class="component-icon lampu-icon">💡</div>
+                            <span>Lampu</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="feedback-message" id="feedback-message"></div>
+        </div>
+    </div>
+
+    <!-- SCREEN 5: Langkah 2 - Hubungkan Kabel -->
+    <div id="screen5" class="screen">
+        <div class="simulation-container">
+            <div class="sim-header">
+                <h2>LANGKAH 2 DARI 5</h2>
+                <p class="sim-instruction">Hubungkan kabel antar komponen sesuai alur energi.</p>
+            </div>
+
+            <div class="sim-content">
+                <aside class="energy-flow-panel">
+                    <h3>ALUR ENERGI</h3>
+                    <div class="energy-flow">
+                        <div class="flow-item">☀ Matahari</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-item">Panel Surya</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-item">SCC</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-item">Baterai</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-item">Inverter</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-item">Lampu</div>
+                    </div>
+                </aside>
+
+                <div class="sim-main">
+                    <canvas id="connectionCanvas" class="connection-canvas"></canvas>
+
+                    <div class="components-diagram">
+                        <div class="diagram-component" id="comp-matahari" data-component="matahari">
+                            <div class="comp-icon">☀</div>
+                            <div class="connection-node" data-node="matahari-out"></div>
+                        </div>
+                        <div class="diagram-component" id="comp-panel" data-component="panel">
+                            <div class="comp-icon">☀</div>
+                            <div class="connection-node in" data-node="panel-in"></div>
+                            <div class="connection-node out" data-node="panel-out"></div>
+                        </div>
+                        <div class="diagram-component" id="comp-scc" data-component="scc">
+                            <div class="comp-icon">🔌</div>
+                            <div class="connection-node in" data-node="scc-in"></div>
+                            <div class="connection-node out" data-node="scc-out"></div>
+                        </div>
+                        <div class="diagram-component" id="comp-baterai" data-component="baterai">
+                            <div class="comp-icon">🔋</div>
+                            <div class="connection-node in" data-node="baterai-in"></div>
+                            <div class="connection-node out" data-node="baterai-out"></div>
+                        </div>
+                        <div class="diagram-component" id="comp-inverter" data-component="inverter">
+                            <div class="comp-icon">⚡</div>
+                            <div class="connection-node in" data-node="inverter-in"></div>
+                            <div class="connection-node out" data-node="inverter-out"></div>
+                        </div>
+                        <div class="diagram-component" id="comp-lampu" data-component="lampu">
+                            <div class="comp-icon">💡</div>
+                            <div class="connection-node in" data-node="lampu-in"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cable-controls">
+                    <div class="cable-types">
+                        <div class="cable-type">
+                            <span class="cable-color red"></span>
+                            <span>Positif (+)</span>
+                        </div>
+                        <div class="cable-type">
+                            <span class="cable-color black"></span>
+                            <span>Negatif (-)</span>
+                        </div>
+                    </div>
+
+                    <div class="cable-buttons">
+                        <button class="btn btn-primary" onclick="checkConnections()">CEK KABEL</button>
+                        <button class="btn btn-secondary" onclick="resetConnections()">RESET KABEL</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feedback-message" id="feedback-message-5"></div>
+        </div>
+    </div>
+
+    <!-- SCREEN 6: Langkah 3 - Uji Sistem -->
+    <div id="screen6" class="screen">
+        <div class="simulation-container">
+            <div class="sim-header">
+                <h2>LANGKAH 3 DARI 5</h2>
+                <p class="sim-instruction">Semua komponen terpasang. Klik tombol untuk menguji sistem.</p>
+            </div>
+
+            <div class="sim-content">
+                <div class="sim-main">
+                    <div class="rumah-display">
+                        <img src="assets/background_rumah_aceh.png" alt="Rumah Aceh" class="rumah-image">
+                        <div class="energy-sequence">
+                            <div class="sequence-item" id="seq-sun">☀ Matahari</div>
+                            <div class="sequence-item" id="seq-panel">☀ Panel Surya</div>
+                            <div class="sequence-item" id="seq-scc">🔌 SCC</div>
+                            <div class="sequence-item" id="seq-battery">🔋 Baterai</div>
+                            <div class="sequence-item" id="seq-inverter">⚡ Inverter</div>
+                            <div class="sequence-item" id="seq-light">💡 Lampu</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-button-section">
+                <button class="btn btn-primary btn-large" onclick="testSystem()">NYALAKAN SISTEM</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 7: Langkah 4 - Hasil Berhasil -->
+    <div id="screen7" class="screen">
+        <div class="success-screen">
+            <div class="success-content">
+                <div class="success-message-box">
+                    <h2>SISTEM BERHASIL</h2>
+                    <p class="success-text">Lampu menyala!</p>
+                    <p class="success-subtext">Rumah Aceh mendapatkan energi dari matahari.</p>
+                </div>
+
+                <div class="house-illuminated">
+                    <img src="assets/background_rumah_aceh.png" alt="Rumah Aceh" class="rumah-image illuminated">
+                    <div class="lamp-glow"></div>
+                </div>
+
+                <div class="success-animation">
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                </div>
+
+                <button class="btn btn-primary btn-large" onclick="goToScreen('screen8')">LANJUT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 8: Langkah 5 - Eksperimen -->
+    <div id="screen8" class="screen">
+        <div class="simulation-container">
+            <div class="sim-header">
+                <h2>LANGKAH 5 DARI 5</h2>
+                <h3>Apa yang terjadi jika komponen dilepas?</h3>
+                <p class="sim-instruction">Pilih komponen untuk dilepas dan amati hasilnya.</p>
+            </div>
+
+            <div class="sim-content">
+                <div class="experiment-panel">
+                    <h3>PILIH KOMPONEN</h3>
+                    <div class="component-options">
+                        <label class="radio-option">
+                            <input type="radio" name="component-remove" value="panel-surya">
+                            <span>Panel Surya</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="component-remove" value="scc">
+                            <span>SCC</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="component-remove" value="baterai">
+                            <span>Baterai</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="component-remove" value="inverter">
+                            <span>Inverter</span>
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="removeComponent()">LEPAS KOMPONEN</button>
+                </div>
+
+                <div class="sim-main">
+                    <div class="experiment-result">
+                        <img src="assets/background_rumah_aceh.png" alt="Rumah Aceh" class="rumah-image" id="experiment-house">
+                    </div>
+                </div>
+
+                <div class="observation-panel">
+                    <h3>HASIL PENGAMATAN</h3>
+                    <div class="observation-text" id="observation-result">
+                        <p>Pilih komponen untuk melihat hasil pengamatan</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="experiment-footer">
+                <button class="btn btn-secondary" onclick="goToScreen('screen9')">SELESAI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 9: Praktikum Selesai -->
+    <div id="screen9" class="screen">
+        <div class="completion-screen">
+            <div class="completion-content">
+                <h2>PRAKTIKUM SELESAI</h2>
+
+                <div class="student-info">
+                    <p class="student-name" id="completion-name"></p>
+                </div>
+
+                <div class="score-section">
+                    <div class="score-value">100</div>
+                    <div class="score-label">POIN</div>
+                </div>
+
+                <div class="stars-section">
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                    <span class="star filled">⭐</span>
+                </div>
+
+                <p class="completion-message">
+                    Kamu berhasil merakit sistem tenaga surya untuk Rumah Aceh.
+                </p>
+
+                <div class="completion-buttons">
+                    <button class="btn btn-primary" onclick="goToScreen('screen8')">LIHAT RANGKUMAN</button>
+                    <button class="btn btn-secondary" onclick="exitSimulation()">KELUAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

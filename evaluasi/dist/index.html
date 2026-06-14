@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!--
+      RESPONSIVE VIEWPORT:
+      - Removed user-scalable=no (accessibility + modern best practice)
+      - viewport-fit=cover for notched phones (iPhone X+)
+      - initial-scale=1.0 only
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Lentera Meuseuraya - Challenge Mode</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+    <!--
+    ============================================================
+    RESPONSIVE OVERRIDE STYLESHEET
+    Purpose: fix responsiveness WITHOUT changing visual design.
+    Applied on top of the existing compiled Tailwind CSS.
+    ============================================================
+    -->
+    <style>
+      /* --------------------------------------------------------
+         1. VIEWPORT HEIGHT — replace 100vh with 100dvh
+            The compiled Tailwind .min-h-screen uses 100vh which
+            gets cropped by mobile browser chrome (address bar).
+         -------------------------------------------------------- */
+      .min-h-screen {
+        min-height: 100dvh !important;
+      }
+      @supports not (height: 100dvh) {
+        .min-h-screen {
+          min-height: 100svh !important;
+        }
+      }
+      @supports not (height: 100svh) {
+        .min-h-screen {
+          min-height: 100vh !important;
+        }
+      }
+
+      /* --------------------------------------------------------
+         2. BODY / ROOT — prevent horizontal scroll on all screens
+         -------------------------------------------------------- */
+      html, body {
+        overflow-x: hidden;
+        /* Safe area insets for notched phones */
+        padding-left:  env(safe-area-inset-left,  0px);
+        padding-right: env(safe-area-inset-right, 0px);
+      }
+      body {
+        overscroll-behavior: none; /* already set, but ensure it */
+      }
+      #root {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* --------------------------------------------------------
+         3. TOUCH TARGETS — all interactive elements ≥ 48×48px
+            Tailwind buttons use py-3 px-5 (≈48px on desktop)
+            but can fall short on small screens.
+         -------------------------------------------------------- */
+      button,
+      [role="button"],
+      input[type="button"],
+      input[type="submit"],
+      input[type="reset"],
+      select {
+        touch-action: manipulation;     /* remove 300ms tap delay  */
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* Answer cards must be at least 48px tall */
+      /* .answer-card-green, .answer-card-red are the two answer buttons */
+      .answer-card-green,
+      .answer-card-red,
+      .answer-card-blue,
+      .answer-card-yellow {
+        min-height: 48px;
+      }
+
+      /* All standalone buttons that Tailwind renders */
+      button {
+        min-height: 44px; /* iOS minimum recommended */
+      }
+
+      /* --------------------------------------------------------
+         4. INPUTS — comfortable touch target height
+         -------------------------------------------------------- */
+      input[type="text"] {
+        min-height: 44px;
+        font-size: 16px !important; /* prevent iOS auto-zoom on focus */
+      }
+
+      /* --------------------------------------------------------
+         5. COUNTDOWN CIRCLE — prevent overflow on very small phones
+            h-28 = 112px, w-28 = 112px. Fine down to ~320px wide.
+            Keep as is but ensure it doesn't overflow.
+         -------------------------------------------------------- */
+      /* Countdown wrapper: already flex + items-center + justify-center */
+      /* No change needed — just ensure the parent isn't overflow:hidden */
+
+      /* --------------------------------------------------------
+         6. DUEL SCREEN — the question text area and player panels
+            must scroll on short-height devices (e.g. landscape phone).
+         -------------------------------------------------------- */
+
+      /* The outermost duel container is flex-col with min-h-screen.
+         On landscape phones the bottom panels can be cut off.
+         Allow vertical scroll when content overflows. */
+      .min-h-screen.flex.flex-col {
+        min-height: 100dvh;
+        overflow-y: auto;
+      }
+
+      /* Timer bar height: h-1.5 (6px) on mobile is fine, keep it */
+
+      /* --------------------------------------------------------
+         7. AVATAR GRID — grid-cols-4 on all screens.
+            On very small phones (< 360px) 4 columns can squash.
+            Drop to 4 cols at ≥ 280px, keeping consistent look.
+         -------------------------------------------------------- */
+      @media (max-width: 319px) {
+        .grid-cols-4 {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+      }
+
+      /* --------------------------------------------------------
+         8. PLAYER SETUP CARDS — max-width cap so they don't
+            stretch too wide on large tablets/TVs.
+            The existing max-w-4xl + px-3 handles most cases.
+         -------------------------------------------------------- */
+
+      /* --------------------------------------------------------
+         9. QUESTION TEXT — clamp font size for TV (large screens)
+            and very small phones.
+         -------------------------------------------------------- */
+      /* The question text uses .text-xs sm:text-sm md:text-base
+         We can let it scale a bit more on TV screens */
+      @media (min-width: 1600px) {
+        /* TV: bump base text sizes */
+        .text-xs  { font-size: 0.9rem  !important; }
+        .text-sm  { font-size: 1rem    !important; }
+        .text-base{ font-size: 1.15rem !important; }
+        .text-lg  { font-size: 1.3rem  !important; }
+        .text-xl  { font-size: 1.5rem  !important; }
+        .text-2xl { font-size: 1.8rem  !important; }
+        .text-3xl { font-size: 2.1rem  !important; }
+
+        /* TV: larger buttons and answer cards */
+        button { min-height: 64px; }
+        .answer-card-green,
+        .answer-card-red,
+        .answer-card-blue,
+        .answer-card-yellow {
+          min-height: 72px;
+        }
+
+        /* Timer circle bigger on TV */
+        .w-9.h-9,
+        .sm\:w-11.sm\:h-11 {
+          width: 3.5rem  !important;
+          height: 3.5rem !important;
+        }
+      }
+
+      /* --------------------------------------------------------
+         10. LOBBY / RESULT SCREENS — village-bg background
+             is a CSS gradient (no image), scales fine.
+             Cloud divs use absolute % positioning — fine.
+             Bottom grass gradient is position:absolute bottom-0.
+             On very short screens (landscape phone) it can overlap
+             content — give the content container z-index safety.
+         -------------------------------------------------------- */
+      /* Already z-10 on content divs — no change needed */
+
+      /* --------------------------------------------------------
+         11. RESULT SCREEN — score bar animation
+             .duration-1500 is a custom duration not in Tailwind core.
+             Ensure it degrades gracefully.
+         -------------------------------------------------------- */
+      @media (prefers-reduced-motion: reduce) {
+        .animate-bounce-in,
+        .animate-correct-flash,
+        .animate-crown-bounce,
+        .animate-pulse-glow,
+        .animate-timer-pulse,
+        .animate-wrong-flash {
+          animation: none !important;
+        }
+        .score-bar-gradient {
+          transition: none !important;
+        }
+      }
+
+      /* --------------------------------------------------------
+         12. SCROLLBAR — already styled in compiled CSS (6px).
+             Add padding-bottom on last scrollable child so
+             content isn't hidden behind iOS home indicator.
+         -------------------------------------------------------- */
+      .overflow-auto {
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+
+      /* --------------------------------------------------------
+         13. FOCUS VISIBLE — keyboard / TV remote navigation
+         -------------------------------------------------------- */
+      button:focus-visible,
+      input:focus-visible,
+      [role="button"]:focus-visible {
+        outline: 3px solid #f2c94c;
+        outline-offset: 3px;
+      }
+
+      /* --------------------------------------------------------
+         14. MOBILE-SPECIFIC LAYOUT TWEAKS
+         -------------------------------------------------------- */
+
+      /* Small Mobile (< 480px): tighten spacing on player cards */
+      @media (max-width: 479px) {
+        /* Player setup card padding */
+        .rounded-xl.p-4 { padding: 14px !important; }
+
+        /* START DUEL button: ensure it's fully visible */
+        /* It uses py-3 sm:py-4 + text-lg sm:text-xl */
+        /* Already fine but add min-height safety */
+        button.rounded-xl {
+          min-height: 52px;
+        }
+
+        /* Avatar buttons: tighten so 4 cols still fit at 320px */
+        /* Each col = (320 - 14*2 - 14*2 - gap*3) / 4 ≈ 58px — fine */
+
+        /* Duel header: tighten question text */
+        /* The question area has px-3 sm:px-5 — already responsive */
+
+        /* VS circle in duel (mobile, shown below player panels) */
+        /* Already h-8 w-8 with text-xs — fine */
+      }
+
+      /* Tablet (768–991px) */
+      @media (min-width: 768px) and (max-width: 991px) {
+        /* Player setup: 2-col grid, ensure cards don't overflow */
+        .max-w-3xl { max-width: 95% !important; }
+      }
+
+      /* Laptop (992–1199px) */
+      @media (min-width: 992px) and (max-width: 1199px) {
+        .max-w-4xl { max-width: 96% !important; }
+      }
+
+      /* --------------------------------------------------------
+         15. LANDSCAPE PHONE — the duel screen needs to scroll
+             since height is very limited (~ 360px).
+         -------------------------------------------------------- */
+      @media (max-height: 500px) and (orientation: landscape) {
+        /* Force the duel layout to be scrollable */
+        .min-h-screen.flex.flex-col {
+          min-height: auto !important;
+          height: auto !important;
+        }
+
+        /* Shrink the question text area so both panels show */
+        .bg-dark-brown\/50.px-3 {
+          padding-top: 6px !important;
+          padding-bottom: 6px !important;
+        }
+        .bg-dark-brown\/50.px-3 p {
+          font-size: 0.75rem !important;
+          line-height: 1.3 !important;
+        }
+
+        /* Compact player panels */
+        .wood-texture.wood-grain.rounded-lg,
+        .wood-texture.wood-grain.rounded-xl {
+          padding: 8px !important;
+        }
+
+        /* Countdown circle: smaller in landscape */
+        .w-28.h-28 {
+          width: 80px  !important;
+          height: 80px !important;
+        }
+        .text-5xl { font-size: 2.25rem !important; }
+
+        /* Score display */
+        .text-2xl.sm\:text-3xl {
+          font-size: 1.5rem !important;
+        }
+      }
+
+      /* --------------------------------------------------------
+         16. WINNER GLOW — ensure it doesn't cause layout shift
+             or overflow on small screens
+         -------------------------------------------------------- */
+      .winner-glow {
+        /* Already uses box-shadow only, no layout impact */
+      }
+
+      /* --------------------------------------------------------
+         17. CROWN POSITION on result screen
+             .-top-6 = -1.5rem. On screens where the card is near
+             the top edge, the crown can clip. Add scroll padding.
+         -------------------------------------------------------- */
+      .grid.grid-cols-1.sm\:grid-cols-2 {
+        padding-top: 1.75rem; /* room for the crown above winner card */
+      }
+
+      /* --------------------------------------------------------
+         18. PLAY AGAIN / FINISH buttons on result screen
+             Already flex-col sm:flex-row. On very small phones
+             ensure they don't overflow their container.
+         -------------------------------------------------------- */
+      .flex.flex-col.sm\:flex-row.gap-3.sm\:gap-4.w-full.max-w-sm {
+        width: 100%;
+      }
+      .flex.flex-col.sm\:flex-row.gap-3.sm\:gap-4.w-full.max-w-sm button {
+        width: 100%;
+      }
+    </style>
+
+    <!-- Compiled app assets — paths unchanged -->
+    <script type="module" crossorigin src="/evaluasi/dist/asset/index.js"></script>
+    <link rel="stylesheet" crossorigin href="/evaluasi/dist/asset/index.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

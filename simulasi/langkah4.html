@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi PLTS - Langkah 4</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: url('/assets/background/simulasi_bg.png') center/cover no-repeat;
+    background-color: #3e2723;
+    display: flex;
+    flex-direction: column;
+}
+.wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+/* Top wood/header */
+.top-wood {
+    width: 100%;
+    height: 64px;
+    background: #4b2d1d;
+    box-shadow: 0 6px 14px rgba(0,0,0,.35);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 100;
+}
+.top-wood::after {
+    content: "Langkah 4 dari 5";
+    color: #f6ecd9;
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+.top-wood::before {
+    content: "SISTEM BERHASIL";
+    color: #f6ecd9;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    display: flex;
+    position: relative;
+    padding: 20px;
+    gap: 20px;
+    height: calc(100vh - 64px - 80px);
+    overflow: hidden;
+}
+/* Info box */
+.info-box {
+    width: 320px;
+    background: rgba(246, 234, 208, 0.95);
+    border: 6px solid #5b341f;
+    border-radius: 12px;
+    padding: 20px;
+    color: #49352b;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    align-self: flex-start;
+}
+.info-box h2 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    font-weight: 800;
+    color: #5b341f;
+    border-bottom: 2px dashed #b07a3a;
+    padding-bottom: 6px;
+}
+.info-box p {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+/* Status success label */
+.status {
+    background: #5f7c2f;
+    color: white;
+    font-size: 20px;
+    font-weight: 800;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 3px solid #d6b53f;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    margin-top: 15px;
+    animation: pulseGlow 1.5s infinite alternate;
+}
+@keyframes pulseGlow {
+    0% { transform: scale(1); box-shadow: 0 0 10px rgba(95, 124, 47, 0.5); }
+    100% { transform: scale(1.03); box-shadow: 0 0 20px rgba(214, 181, 63, 0.8); }
+}
+/* House Area Container */
+.house-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+.house-area {
+    position: relative;
+    width: 100%;
+    max-width: 760px;
+    aspect-ratio: 760 / 600;
+    background: transparent;
+}
+.house-area img.rumah-bg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+/* Animated Wires SVG */
+.wires-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+}
+.flow-line {
+    stroke-dasharray: 12, 6;
+    animation: dashFlow 1.2s linear infinite;
+}
+@keyframes dashFlow {
+    to {
+        stroke-dashoffset: -36;
+    }
+}
+/* Component Node placement (matching Steps 1, 2, & 3) */
+.component-node {
+    position: absolute;
+    z-index: 20;
+}
+.component-image-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.component-image {
+    max-width: 85%;
+    max-height: 85%;
+    object-fit: contain;
+}
+.component-node[data-name="lamp"] .component-image {
+    filter: drop-shadow(0 0 12px #fff176) drop-shadow(0 0 25px #ffd54f);
+    animation: bulbGlow 2s infinite alternate;
+}
+@keyframes bulbGlow {
+    0% { filter: drop-shadow(0 0 8px #fff176) drop-shadow(0 0 16px #ffd54f); }
+    100% { filter: drop-shadow(0 0 16px #fff176) drop-shadow(0 0 32px #ffc107); }
+}
+.component-name {
+    margin-top: 2px;
+    font-size: 10px;
+    font-weight: 800;
+    color: white;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,.8);
+    background: rgba(75, 45, 29, 0.85);
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+.component-node[data-name="panel"] { width: 22%; height: 14%; top: 12%; left: 50%; transform: translateX(-50%); }
+.component-node[data-name="lamp"] { width: 10%; height: 15%; top: 34%; left: 50%; transform: translateX(-50%); }
+.component-node[data-name="scc"] { width: 15%; height: 12%; top: 54%; left: 50%; transform: translateX(-50%); }
+.component-node[data-name="mcb"] { width: 9%; height: 10%; top: 54%; left: 64%; }
+.component-node[data-name="spd"] { width: 9%; height: 10%; top: 54%; left: 74%; }
+.component-node[data-name="battery"] { width: 16%; height: 12%; top: 72%; left: 36%; }
+.component-node[data-name="inverter"] { width: 15%; height: 12%; top: 72%; left: 56%; }
+/* Component panel on the right */
+.component-panel {
+    width: 200px;
+    height: 100%;
+    background: rgba(246, 234, 208, 0.95);
+    border: 6px solid #5b341f;
+    border-radius: 12px;
+    padding: 16px 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+.component-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.4);
+    padding: 8px;
+    border-radius: 8px;
+    width: 100%;
+    border: 2px solid transparent;
+}
+.component-item img {
+    width: 65px;
+    height: 65px;
+    object-fit: contain;
+}
+.component-item span {
+    font-size: 11px;
+    font-weight: 800;
+    color: #49352b;
+    text-align: center;
+}
+/* Control buttons at the bottom */
+.bottom-bar {
+    width: 100%;
+    height: 80px;
+    background: rgba(75, 45, 29, 0.9);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+.btn {
+    width: 180px;
+    height: 48px;
+    border: none;
+    background: #b07a3a;
+    color: white;
+    font-size: 15px;
+    font-weight: 800;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn:hover {
+    background: #c58c48;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+.btn:active {
+    transform: translateY(0);
+}
+.btn.lanjut {
+    background: #5f7c2f;
+    width: 260px;
+}
+.btn.lanjut:hover {
+    background: #6e9036;
+}
+.btn.cek {
+    background: #a67843;
+}
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+    .main-content {
+        padding: 15px;
+        gap: 15px;
+    }
+    .info-box {
+        width: 240px;
+        padding: 14px;
+    }
+    .info-box h2 { font-size: 1.1rem; }
+    .info-box p { font-size: 0.85rem; }
+    .status { font-size: 16px; padding: 6px 12px; margin-top: 10px; }
+    .component-panel {
+        width: 160px;
+        gap: 10px;
+    }
+    .component-item { padding: 6px; }
+    .component-item img { width: 50px; height: 50px; }
+    .component-item span { font-size: 10px; }
+    .house-area {
+        max-width: 580px;
+    }
+}
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+        height: auto;
+    }
+    .wrapper {
+        height: auto;
+        min-height: 100vh;
+        justify-content: flex-start;
+    }
+    .main-content {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+        padding: 12px;
+        gap: 12px;
+    }
+    .info-box {
+        width: 100%;
+        align-self: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .info-box h2 { border-bottom: none; margin-bottom: 0; padding-bottom: 0; font-size: 1rem; }
+    .info-box p { font-size: 0.85rem; max-width: 60%; }
+    .status { margin-top: 0; padding: 6px 12px; font-size: 14px; }
+    .house-container {
+        width: 100%;
+        margin: 10px 0;
+    }
+    .house-area {
+        width: 95vw;
+        max-width: 500px;
+    }
+    .component-panel {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        padding: 10px;
+        gap: 12px;
+    }
+    .component-item {
+        display: inline-flex;
+        width: 90px;
+        flex-shrink: 0;
+    }
+    .bottom-bar {
+        position: sticky;
+        bottom: 0;
+        height: 60px;
+        padding: 0 16px;
+    }
+    .btn {
+        width: 110px;
+        height: 38px;
+        font-size: 12px;
+    }
+    .btn.lanjut {
+        width: 160px;
+    }
+}
+@media (max-width: 480px) {
+    .info-box {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .info-box p { max-width: 100%; }
+    .status { width: 100%; }
+    .house-area {
+        width: 98vw;
+    }
+    .bottom-bar {
+        padding: 0 10px;
+    }
+    .btn {
+        width: 95px;
+        height: 36px;
+        font-size: 11px;
+    }
+    .btn.lanjut {
+        width: 140px;
+    }
+    .component-name {
+        font-size: 8px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="top-wood"></div>
+    <div class="main-content">
+        <div class="info-box">
+            <h2>Langkah 4 dari 5</h2>
+            <p>Lampu menyala, rumah Aceh mendapatkan energi dari matahari.</p>
+            <div class="status">Sistem Berhasil</div>
+        </div>
+        <div class="house-container">
+            <div class="house-area">
+                <img src="/assets/rumah/rumah_luar.png" class="rumah-bg" alt="Rumah Aceh">
+                
+                <!-- Animated SVG Cables with electricity flow effects (Matches normalized coordinate system of 760 x 600) -->
+                <svg class="wires-svg" viewBox="0 0 760 600" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Curve Panel (50%, 19%) to MCB (68.5%, 59%) -->
+                    <path d="M 380 114 Q 450 230 517 354" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M 380 114 Q 450 230 517 354" class="flow-line" fill="none" stroke="#ffe082" stroke-width="2.5" stroke-linecap="round"/>
+                    
+                    <!-- Line MCB (68.5%, 59%) to SPD (78.5%, 59%) -->
+                    <path d="M 520 354 L 593 354" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M 520 354 L 593 354" class="flow-line" fill="none" stroke="#ffe082" stroke-width="2.5" stroke-linecap="round"/>
+                    
+                    <!-- Curve SPD (78.5%, 59%) to SCC (50%, 60%) -->
+                    <path d="M 593 354 Q 486 360 380 360" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M 593 354 Q 486 360 380 360" class="flow-line" fill="none" stroke="#ffe082" stroke-width="2.5" stroke-linecap="round"/>
+                    
+                    <!-- Curve SCC (50%, 60%) to Battery (44%, 78%) -->
+                    <path d="M 380 360 Q 357 414 334 468" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M 380 360 Q 357 414 334 468" class="flow-line" fill="none" stroke="#ff8f00" stroke-width="2.5" stroke-linecap="round"/>
+                    
+                    <!-- Line Battery (44%, 78%) to Inverter (63.5%, 78%) -->
+                    <path d="M 334 468 L 483 468" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M 334 468 L 483 468" class="flow-line" fill="none" stroke="#ffe082" stroke-width="2.5" stroke-linecap="round"/>
+                    
+                    <!-- Curve Inverter (63.5%, 78%) to Lamp (50%, 41.5%) -->
+                    <path d="M 483 468 Q 431 358 380 249" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M 483 468 Q 431 358 380 249" class="flow-line" fill="none" stroke="#ffd54f" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <!-- 7 Consistent Components with Glowing Effects -->
+                <div class="component-node" data-name="panel">
+                    <div class="component-image-wrap">
+                        <img src="/assets/component/panel surya.png" class="component-image" alt="Panel Surya">
+                        <div class="component-name">Panel Surya</div>
+                    </div>
+                </div>
+                <div class="component-node" data-name="lamp">
+                    <div class="component-image-wrap">
+                        <img src="/assets/component/lampu_on.png" class="component-image" alt="Lampu">
+                        <div class="component-name">Lampu</div>
+                    </div>
+                </div>
+                <div class="component-node" data-name="scc">
+                    <div class="component-image-wrap">
+                        <img src="/assets/component/SCC.png" class="component-image" alt="SCC">
+                        <div class="component-name">SCC</div>
+                    </div>
+                </div>
+                <div class="component-node" data-name="mcb">
+                    <div class="component-image-wrap">
+                        <img src="/assets/component/DC mcb.png" class="component-image" alt="MCB">
+                        <div class="component-name">MCB</div>
+                    </div>
+                </div>
+                <div class="component-node" data-name="spd">
+                    <div class="component-image-wrap">
+                        <img src="/assets/component/SPD.png" class="component-image" alt="SPD">
+                        <div class="component-name">SPD</div>
+                    </div>
+                </div>
+                <div class="component-node" data-name="battery">
+                    <div class="component-image-wrap">
+                        <img src="/assets/component/BATERAI.png" class="component-image" alt="Baterai">
+                        <div class="component-name">Baterai</div>
+                    </div>
+                </div>
+                <div class="component-node" data-name="inverter">
+                    <div class="component-image-wrap">
+                        <img src="/assets/component/INVERTER.png" class="component-image" alt="Inverter">
+                        <div class="component-name">Inverter</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="component-panel">
+            <div class="component-item">
+                <img src="/assets/component/panel surya.png">
+                <span>Panel Surya</span>
+            </div>
+            <div class="component-item">
+                <img src="/assets/component/SCC.png">
+                <span>SCC</span>
+            </div>
+            <div class="component-item">
+                <img src="/assets/component/BATERAI.png">
+                <span>Baterai</span>
+            </div>
+            <div class="component-item">
+                <img src="/assets/component/INVERTER.png">
+                <span>Inverter</span>
+            </div>
+            <div class="component-item">
+                <img src="/assets/component/lampu_on.png">
+                <span>Lampu</span>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-bar">
+        <button class="btn petunjuk" onclick="openHintModal()">PETUNJUK</button>
+        <!-- Correct redirection to Langkah 5 -->
+        <button class="btn lanjut" onclick="window.location.href='langkah5.html'">LANJUT</button>
+        <button class="btn cek" onclick="alert('Sistem sedang berjalan menyalurkan energi matahari!')">CEK POSISI</button>
+    </div>
+</div>
+<script>
+function openHintModal(){
+    const modal = document.createElement('div');
+    modal.className = 'modal open';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>SISTEM AKTIF DAN BERHASIL</h3>
+            <p>1. Panel Surya menangkap cahaya matahari dan mengubahnya menjadi listrik DC.</p>
+            <p>2. Arus mengalir melewati MCB dan SPD sebagai sistem pengaman.</p>
+            <p>3. SCC mengatur daya listrik sebelum disimpan ke dalam Baterai.</p>
+            <p>4. Inverter mengambil listrik DC dari baterai dan mengubahnya menjadi listrik AC.</p>
+            <p>5. Listrik AC disalurkan dan berhasil menyalakan Lampu Rumah Aceh.</p>
+            <button id="closeHint">TUTUP</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#closeHint').addEventListener('click', ()=> modal.remove());
+}
+</script>
+</body>
+</html>

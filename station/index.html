@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Station - Lentera Meuseuraya</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    -webkit-tap-highlight-color: transparent; /* remove tap flash on mobile */
+}
+
+/* Use dvh (dynamic viewport height) so mobile browser chrome is handled.
+   Falls back to svh, then 100vh for older browsers. */
+:root {
+    --vh-full: 100dvh;
+}
+@supports not (height: 100dvh) {
+    :root { --vh-full: 100svh; }
+}
+@supports not (height: 100svh) {
+    :root { --vh-full: 100vh; }
+}
+
+/* ============================================================
+   BODY
+   ============================================================ */
+body {
+    width: 100%;
+    min-height: var(--vh-full);
+    background-color: #2b170c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    /* Allow vertical scroll on small screens / TV zoom */
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* ============================================================
+   FULLSCREEN BACKGROUND & OVERLAY
+   ============================================================ */
+.bg-wrapper {
+    position: fixed;   /* fixed so it covers even when body scrolls */
+    inset: -30px;
+    background: url('../assets/background/station.png') center / cover no-repeat;
+    z-index: 1;
+    /* Parallax transform applied by JS — only on desktop */
+    transform: scale(1.02);
+    transition: transform 0.15s ease-out;
+    will-change: transform;
+}
+
+.bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 2;
+}
+
+/* ============================================================
+   CONIC SUNLIGHT RAYS
+   Disable on reduce-motion or pointer:coarse (touch) devices
+   ============================================================ */
+.sun-rays {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-conic-gradient(
+        from 0deg,
+        rgba(255, 235, 59, 0.04) 0deg 15deg,
+        transparent 15deg 30deg
+    );
+    animation: rotateRays 60s linear infinite;
+    pointer-events: none;
+    z-index: 3;
+}
+@keyframes rotateRays {
+    to { transform: rotate(360deg); }
+}
+/* Kill heavy animation on lower-end/touch screens */
+@media (prefers-reduced-motion: reduce) {
+    .sun-rays { animation: none; }
+}
+
+/* ============================================================
+   CANVAS
+   ============================================================ */
+#effectsCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 4;
+}
+
+/* ============================================================
+   MAIN CONTAINER
+   ============================================================ */
+.container {
+    position: relative;
+    z-index: 10;
+    width: min(92%, 1200px);
+    min-height: var(--vh-full);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: clamp(16px, 3vw, 40px);
+    padding: clamp(20px, 4vh, 60px) 0;
+}
+
+/* ============================================================
+   WOODEN BOARD
+   ============================================================ */
+.board {
+    /* Let the board shrink/grow with the container */
+    flex: 1 1 0;
+    min-width: 0;
+    /* Responsive height: fill available space but never squash content */
+    height: auto;
+    min-height: min(85vh, 520px);
+    background: url('/assets/ui/papan_pilih_station.svg') no-repeat;
+    background-size: 100% 100%;
+    padding: clamp(28px, 5vh, 56px) clamp(24px, 5vw, 68px) clamp(24px, 4vh, 44px);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    /* Entrance animation */
+    transform: translateX(-100vw);
+    opacity: 0;
+    animation: slideInLeft 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+    /* transition only for parallax nudge */
+    transition: transform 0.15s ease-out;
+    position: relative; /* for progress-badge absolute positioning */
+}
+@keyframes slideInLeft {
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ============================================================
+   PROGRESS BADGE
+   ============================================================ */
+.progress-badge {
+    position: absolute;
+    top: clamp(-36px, -4vh, -24px);
+    right: clamp(12px, 2vw, 24px);
+    background: #4b2d1d;
+    border: 3px solid #ffd54f;
+    border-radius: 12px;
+    padding: 6px 14px;
+    color: #f6ead0;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 20;
+    min-width: clamp(110px, 14vw, 140px);
+}
+.progress-badge .badge-title {
+    font-size: clamp(8px, 1vw, 10px);
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #ffd54f;
+    letter-spacing: 1px;
+}
+.progress-badge .badge-value {
+    font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+    font-weight: 800;
+}
+
+/* ============================================================
+   WELCOME TEXT
+   ============================================================ */
+.hello {
+    font-size: clamp(1.2rem, 2.5vw, 2.4rem);
+    color: #ffe48b;
+    font-weight: 800;
+    text-shadow:
+        2px 2px #734000,
+        4px 4px 10px rgba(0, 0, 0, 0.45);
+    margin-bottom: 5px;
+    line-height: 1.25;
+    min-height: clamp(54px, 8vh, 80px);
+}
+.subtitle {
+    text-align: left;
+    font-size: clamp(0.95rem, 1.8vw, 1.6rem);
+    font-weight: 700;
+    margin-bottom: clamp(14px, 3vh, 28px);
+    color: #44322c;
+    border-bottom: 2px dashed rgba(68, 50, 44, 0.25);
+    padding-bottom: 8px;
+}
+
+/* ============================================================
+   MENU
+   ============================================================ */
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 2vh, 18px);
+    flex: 1;
+}
+.menu-item-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* ---- BUTTON ---- */
+.btn-menu {
+    width: 100%;
+    /* Minimum 48px for touch; grows with viewport */
+    min-height: clamp(48px, 10vh, 96px);
+    height: clamp(52px, 9vh, 90px);
+    background: url('/assets/ui/simulasi-button (1).svg') center / 100% 100% no-repeat;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-size: clamp(0.85rem, 1.5vw, 1.45rem);
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+    /* Use pointer events so touch + mouse both work */
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 clamp(18px, 4vw, 48px);
+    gap: clamp(8px, 1.2vw, 14px);
+    outline: none;
+    /* Smooth hover/active feedback */
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+                filter  0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* Ensure focus remains visible for keyboard / TV remote */
+    border-radius: 6px;
+}
+.btn-menu:focus-visible {
+    outline: 3px solid #ffd54f;
+    outline-offset: 3px;
+}
+.btn-menu .btn-icon {
+    width: clamp(18px, 2.2vw, 26px);
+    height: clamp(18px, 2.2vw, 26px);
+    fill: currentColor;
+    flex-shrink: 0;
+    filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.5));
+}
+/* Hover / active — only for pointer:fine (mouse/pen) */
+@media (hover: hover) and (pointer: fine) {
+    .btn-menu:hover:not(.locked) {
+        transform: scale(1.04) translateY(-2px);
+        filter: brightness(1.15) drop-shadow(0 4px 12px rgba(255, 213, 79, 0.45));
+    }
+}
+.btn-menu:active:not(.locked) {
+    transform: scale(0.97) translateY(1px);
+}
+/* Locked */
+.btn-menu.locked {
+    filter: grayscale(0.8) brightness(0.6);
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+.btn-menu.locked:hover,
+.btn-menu.locked:active {
+    transform: none;
+}
+
+.btn-desc {
+    font-size: clamp(9px, 1vw, 11px);
+    font-weight: 700;
+    color: #49352b;
+    padding-left: clamp(24px, 4vw, 52px);
+    opacity: 0.9;
+}
+
+/* ============================================================
+   LOGO AREA (RIGHT)
+   ============================================================ */
+.logo {
+    flex: 0 0 auto;
+    width: clamp(160px, 28vw, 360px);
+    transform: translateX(100vw);
+    opacity: 0;
+    animation: slideInRight 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Parallax nudge applied by JS — see transition on .board */
+    transition: transform 0.15s ease-out;
+}
+@keyframes slideInRight {
+    to { transform: translateX(0); opacity: 1; }
+}
+.logo-inner {
+    width: 100%;
+    animation: floatLogo 4s ease-in-out infinite alternate;
+}
+.logo-inner img {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
+    display: block;
+}
+@keyframes floatLogo {
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(-12px); }
+}
+/* Reduce float amplitude when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .logo-inner { animation: none; }
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    color: rgba(246, 238, 208, 0.7);
+    font-size: clamp(9px, 1vw, 11px);
+    font-weight: 700;
+    text-align: center;
+    width: 100%;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.5px;
+    pointer-events: none;
+}
+
+/* ============================================================
+   AUDIO CONTROL
+   ============================================================ */
+.audio-ctrl {
+    position: fixed;
+    top: clamp(12px, 2vh, 20px);
+    left: clamp(12px, 2vw, 20px);
+    /* Minimum 48px for touch; bigger for TV */
+    width: clamp(44px, 5vw, 56px);
+    height: clamp(44px, 5vw, 56px);
+    border-radius: 50%;
+    background: rgba(75, 45, 29, 0.85);
+    border: 3px solid #ffd54f;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    transition: transform 0.2s ease;
+    touch-action: manipulation;
+}
+.audio-ctrl:hover  { transform: scale(1.1); }
+.audio-ctrl:active { transform: scale(0.95); }
+.audio-ctrl:focus-visible {
+    outline: 3px solid #ffd54f;
+    outline-offset: 3px;
+}
+.audio-ctrl svg {
+    width: clamp(18px, 2.5vw, 24px);
+    height: clamp(18px, 2.5vw, 24px);
+    fill: #ffd54f;
+}
+
+/* ============================================================
+   BREAKPOINTS
+   ============================================================ */
+
+/* ---------- LAPTOP 992–1199 ---------- */
+@media (max-width: 1199px) {
+    .container {
+        width: min(95%, 1100px);
+        gap: clamp(14px, 2.5vw, 30px);
+    }
+}
+
+/* ---------- TABLET 768–991 ---------- */
+@media (max-width: 991px) {
+    body {
+        align-items: flex-start;
+    }
+    .container {
+        flex-direction: column-reverse; /* logo on top, board below */
+        justify-content: flex-start;
+        align-items: center;
+        width: 92%;
+        min-height: auto;
+        padding: clamp(50px, 8vh, 80px) 0 clamp(40px, 6vh, 60px);
+    }
+    .board {
+        width: 100%;
+        min-height: auto;
+        /* Reset parallax-style transitions for touch */
+        transform: translateY(-40px);
+        opacity: 0;
+        animation: slideInDown 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        transition: none;
+    }
+    .logo {
+        width: clamp(140px, 40vw, 280px);
+        transform: translateY(40px);
+        opacity: 0;
+        animation: slideInUp 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        transition: none;
+    }
+    .hello       { min-height: auto; text-align: center; }
+    .subtitle    { text-align: center; }
+    .progress-badge {
+        position: relative;
+        top: 0; right: 0;
+        margin: 0 auto clamp(12px, 2vh, 20px) auto;
+        display: inline-block;
+    }
+    @keyframes slideInDown {
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes slideInUp {
+        to { transform: translateY(0); opacity: 1; }
+    }
+}
+
+/* ---------- MOBILE below 768 ---------- */
+@media (max-width: 767px) {
+    .container {
+        width: 94%;
+        padding: clamp(44px, 7vh, 64px) 0 clamp(36px, 5vh, 52px);
+        gap: clamp(12px, 3vh, 24px);
+    }
+    .board {
+        padding: clamp(22px, 4vh, 36px) clamp(18px, 4vw, 32px) clamp(18px, 3vh, 28px);
+        border-radius: 12px;
+    }
+    .logo {
+        width: clamp(120px, 45vw, 220px);
+    }
+    /* Ensure menu items are comfortably tappable */
+    .btn-menu {
+        height: clamp(52px, 10vw, 72px);
+        min-height: 52px;
+        padding: 0 clamp(16px, 4vw, 32px);
+        font-size: clamp(0.82rem, 3.5vw, 1rem);
+    }
+    .btn-desc {
+        padding-left: clamp(16px, 4vw, 28px);
+        font-size: clamp(9px, 2.5vw, 11px);
+    }
+    .menu {
+        gap: clamp(10px, 2.5vw, 16px);
+    }
+}
+
+/* ---------- SMALL MOBILE below 480 ---------- */
+@media (max-width: 479px) {
+    .container { width: 96%; }
+    .board {
+        padding: 20px 16px 18px;
+        border-radius: 10px;
+    }
+    .btn-menu {
+        height: 52px;
+        min-height: 48px;
+        padding: 0 14px;
+        font-size: 0.82rem;
+        gap: 8px;
+    }
+    .btn-menu .btn-icon {
+        width: 18px;
+        height: 18px;
+    }
+    .btn-desc {
+        padding-left: 14px;
+        font-size: 9px;
+    }
+    .hello {
+        font-size: clamp(1rem, 5.5vw, 1.3rem);
+    }
+    .subtitle {
+        font-size: clamp(0.85rem, 4vw, 1rem);
+    }
+}
+
+/* ---------- LARGE / TV above 1600 ---------- */
+@media (min-width: 1600px) {
+    .container {
+        width: min(88%, 1400px);
+        gap: 48px;
+    }
+    /* Larger touch targets for TV remotes */
+    .btn-menu {
+        height: clamp(90px, 7vh, 110px);
+        font-size: clamp(1.3rem, 1.5vw, 1.7rem);
+    }
+    .audio-ctrl {
+        width: 64px;
+        height: 64px;
+    }
+    .audio-ctrl svg {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* ---------- Disable parallax for touch/coarse pointer ---------- */
+@media (pointer: coarse) {
+    .bg-wrapper {
+        transition: none !important;
+        transform: scale(1.02) !important;
+    }
+    .logo {
+        transition: none !important;
+    }
+}
+</style>
+</head>
+<body>
+    <!-- Parallax background -->
+    <div class="bg-wrapper" id="parallaxBg">
+        <div class="bg-overlay"></div>
+    </div>
+
+    <!-- Sunlight conic rays -->
+    <div class="sun-rays"></div>
+
+    <!-- Floating Canvas -->
+    <canvas id="effectsCanvas"></canvas>
+
+    <!-- Mute / Unmute Button -->
+    <div class="audio-ctrl" id="audioToggle" role="button" tabindex="0" title="Matikan/Nyalakan Suara" aria-label="Toggle music">
+        <svg id="audioIcon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18.03,19.86 21,16.28 21,12C21,7.72 18.03,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
+        </svg>
+    </div>
+
+    <!-- Background music -->
+    <audio id="bgMusic" src="/assets/audio/menu-backsound.mp3" loop preload="none"></audio>
+
+    <div class="container">
+        <!-- Selection Board -->
+        <div class="board" id="boardElement">
+            <!-- Learning progress badge -->
+            <div class="progress-badge" id="progressBadge" aria-label="Progress Belajar">
+                <div class="badge-title">Progress Belajar</div>
+                <div class="badge-value" id="progressValue">0%</div>
+            </div>
+
+            <div class="hello" id="welcome-text" aria-live="polite"></div>
+            <div class="subtitle">Pilih Station</div>
+
+            <div class="menu" role="navigation" aria-label="Menu Station">
+                <!-- Menu Item 1 -->
+                <div class="menu-item-wrap">
+                    <button class="btn-menu" id="btn-mission"
+                            onclick="window.location.href='../mission/index.html'"
+                            aria-label="Pembelajaran Digital – Pelajari komponen PLTS">
+                        <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H12V3M12 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H12V3M12 18.5V4.5"
+                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        </svg>
+                        <span class="btn-text">Pembelajaran Digital</span>
+                    </button>
+                    <div class="btn-desc">→ Pelajari konsep energi terbarukan</div>
+                </div>
+
+                <!-- Menu Item 2 -->
+                <div class="menu-item-wrap">
+                    <button class="btn-menu" id="btn-simulasi"
+                            onclick="window.location.href='/simulasi/langkah1.html'"
+                            aria-label="Simulasi Perakitan – Rakit sistem panel surya interaktif">
+                        <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+                        </svg>
+                        <span class="btn-text">Simulasi Perakitan</span>
+                    </button>
+                    <div class="btn-desc">→ Rakit sistem panel surya interaktif</div>
+                </div>
+
+                <!-- Menu Item 3 -->
+                <div class="menu-item-wrap">
+                    <button class="btn-menu" id="btn-evaluasi"
+                            onclick="window.location.href='/evaluasi/dist/index.html'"
+                            aria-label="Challenge dan Evaluasi – Uji kemampuanmu dan kumpulkan poin">
+                        <svg class="btn-icon" id="evaluasi-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18 2H6v3c0 2.2 1.8 4 4 4h1v2.5c0 1.2-.8 2.2-2 2.4V16h8v-2.1c-1.2-.2-2-1.2-2-2.4V9h1c2.2 0 4-1.8 4-4V2zM4 5c0-1.1.9-2 2-2h1v4H6c-1.1 0-2-.9-2-2zm14 0c0 1.1-.9 2-2 2h-1V3h1c1.1 0 2 .9 2 2zM12 18c-2.2 0-4 1.8-4 4h8c0-2.2-1.8-4-4-4z"/>
+                        </svg>
+                        <span class="btn-text">Challenge &amp; Evaluasi</span>
+                    </button>
+                    <div class="btn-desc">→ Uji kemampuanmu dan kumpulkan poin</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logo Tree Area -->
+        <div class="logo" id="logoElement">
+            <div class="logo-inner" id="logoInner">
+                <img src="/assets/ui/Group.png" alt="Lentera Meuseuraya" draggable="false">
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer" aria-hidden="true">
+        Lentera Meuseuraya | Media Pembelajaran Energi Terbarukan
+    </div>
+
+<script>
+/* ============================================================
+   AUDIO CONTEXT & SYNTH FALLBACK
+   ============================================================ */
+let audioCtx = null;
+function getAudioCtx() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+}
+function playSynth(freq, dur, type = 'sine', volume = 0.2) {
+    try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+        osc.start();
+        osc.stop(ctx.currentTime + dur + 0.05);
+    } catch (e) {}
+}
+
+/* ============================================================
+   SOUND EFFECTS
+   ============================================================ */
+const sfxHover = new Audio('/assets/audio/hover.mp3');
+sfxHover.volume = 0.25;
+const sfxClick = new Audio('/assets/audio/click.mp3');
+sfxClick.volume = 0.35;
+
+function playHoverSound() {
+    sfxHover.currentTime = 0;
+    sfxHover.play().catch(() => playSynth(880, 0.08, 'triangle', 0.15));
+}
+function playClickSound() {
+    sfxClick.currentTime = 0;
+    sfxClick.play().catch(() => playSynth(220, 0.4, 'sine', 0.3));
+}
+
+/* ============================================================
+   BACKGROUND MUSIC
+   Uses pointer/keyboard interaction to respect browser autoplay policy.
+   Works across Chrome, Firefox, Edge, Safari, Samsung Internet.
+   ============================================================ */
+const bgMusic = document.getElementById('bgMusic');
+let musicPlaying = false;
+let isMuted = false;
+
+function startMusic() {
+    if (musicPlaying || isMuted) return;
+    try {
+        const ctx = getAudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+    } catch (e) {}
+    bgMusic.volume = 0.25;
+    bgMusic.play()
+        .then(() => { musicPlaying = true; })
+        .catch(() => {}); // silently fail if still blocked
+}
+
+// Trigger on first meaningful interaction
+['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, startMusic, { once: true, passive: true });
+});
+
+/* ============================================================
+   AUDIO TOGGLE BUTTON
+   Supports click, keyboard (Enter/Space), touch
+   ============================================================ */
+const audioToggle = document.getElementById('audioToggle');
+const audioIcon   = document.getElementById('audioIcon');
+
+const ICON_ON  = `<path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18.03,19.86 21,16.28 21,12C21,7.72 18.03,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>`;
+const ICON_OFF = `<path d="M12,4L9.91,6.09L12,8.18M19,12C19,11.38 18.89,10.79 18.68,10.23L20.21,8.7C20.72,9.7 21,10.82 21,12C21,16.28 18.03,19.86 14,20.77V18.71C16.89,17.85 19,15.17 19,12M3,2.27L4.27,1L21,17.73L19.73,19L15,14.27V20L10,15H6V9H9.73L3,2.27M12,4V9.27L9.7,6.97L12,4M16.5,12C16.5,11.13 16.09,10.36 15.46,9.83L17.02,8.27C17.95,9.22 18.5,10.55 18.5,12C18.5,13.45 17.95,14.78 17.02,15.73L15.46,14.17C16.09,13.64 16.5,12.87 16.5,12M12,11.27L14.73,14H12V11.27Z"/>`;
+
+function toggleMute(e) {
+    if (e) e.stopPropagation();
+    isMuted = !isMuted;
+    if (isMuted) {
+        audioIcon.innerHTML = ICON_OFF;
+        bgMusic.pause();
+        audioToggle.setAttribute('aria-label', 'Nyalakan suara');
+    } else {
+        audioIcon.innerHTML = ICON_ON;
+        try {
+            const ctx = getAudioCtx();
+            if (ctx.state === 'suspended') ctx.resume();
+        } catch (e) {}
+        bgMusic.play().catch(() => {});
+        musicPlaying = true;
+        audioToggle.setAttribute('aria-label', 'Matikan suara');
+    }
+}
+audioToggle.addEventListener('pointerdown', toggleMute);
+audioToggle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMute(); }
+});
+
+/* ============================================================
+   TYPEWRITER WELCOME TEXT
+   ============================================================ */
+const WELCOME_TEXT = "Selamat Datang!\ndi Lentera Meuseuraya";
+const welcomeEl = document.getElementById('welcome-text');
+let charIdx = 0;
+function typeWriter() {
+    if (charIdx < WELCOME_TEXT.length) {
+        const c = WELCOME_TEXT[charIdx++];
+        welcomeEl.innerHTML += c === '\n' ? '<br>' : c;
+        setTimeout(typeWriter, 45);
+    }
+}
+setTimeout(typeWriter, 700);
+
+/* ============================================================
+   PARALLAX — only on non-coarse-pointer (mouse/pen), non-reduced-motion
+   ============================================================ */
+const parallaxBg    = document.getElementById('parallaxBg');
+const boardElement  = document.getElementById('boardElement');
+const logoElement   = document.getElementById('logoElement');
+
+const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+const prefersReduced  = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const enableParallax  = !isCoarsePointer && !prefersReduced;
+
+if (enableParallax) {
+    document.addEventListener('mousemove', (e) => {
+        const fx = (e.clientX - window.innerWidth  / 2) * -0.01;
+        const fy = (e.clientY - window.innerHeight / 2) * -0.01;
+        parallaxBg.style.transform  = `scale(1.02) translate(${fx * 1.5}px, ${fy * 1.5}px)`;
+        logoElement.style.transform = `translate(${fx * -0.6}px, ${fy * -0.6}px)`;
+    }, { passive: true });
+}
+
+/* ============================================================
+   PARTICLE / EFFECTS CANVAS
+   ============================================================ */
+const canvas = document.getElementById('effectsCanvas');
+const ctx2d  = canvas.getContext('2d');
+
+function resizeCanvas() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas, { passive: true });
+resizeCanvas();
+
+// Reduce particle count on mobile / low-power
+const isMobile   = window.innerWidth < 768;
+const isTablet   = window.innerWidth < 992;
+const LEAF_COUNT = isMobile ? 6  : isTablet ? 10 : 15;
+const DUST_COUNT = isMobile ? 8  : isTablet ? 12 : 18;
+const FIRE_COUNT = isMobile ? 5  : isTablet ?  7 : 10;
+
+class EffectParticle {
+    constructor(type) {
+        this.type = type;
+        this.reset();
+    }
+    reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = this.type === 'leaf' ? -20
+               : this.type === 'dust' ? canvas.height + 20
+               : 0;
+        this.size  = this.type === 'leaf'    ? Math.random() * 8 + 6
+                   : this.type === 'dust'    ? Math.random() * 2 + 1
+                   :                          Math.random() * 3 + 2;
+        this.speedX = this.type === 'leaf' ? Math.random() * 1.2 + 0.4
+                    : this.type === 'dust' ? Math.random() * 0.5 - 0.25
+                    : 0;
+        this.speedY = this.type === 'leaf' ?  Math.random() * 1.0 + 0.6
+                    : this.type === 'dust' ? -(Math.random() * 0.6 + 0.3)
+                    : 0;
+        this.angle  = Math.random() * Math.PI * 2;
+        this.spin   = Math.random() * 0.02 - 0.01;
+        this.opacity = Math.random() * 0.5 + 0.3;
+
+        if (this.type === 'firefly') {
+            this.angleVel = Math.random() * 0.05 + 0.02;
+            this.radius   = Math.random() * 30 + 10;
+        }
+    }
+    update() {
+        if (this.type === 'firefly') {
+            const lr = logoElement.getBoundingClientRect();
+            if (lr.width > 0) {
+                this.angle += this.angleVel;
+                const spread = window.innerWidth < 768 ? 1.5 : 2.5;
+                this.x = (lr.left + lr.width  / 2) + Math.cos(this.angle)       * this.radius * spread;
+                this.y = (lr.top  + lr.height / 2) + Math.sin(this.angle * 0.8) * this.radius * 1.5;
+                this.opacity = 0.5 + Math.sin(this.angle * 2.5) * 0.3;
+            }
+        } else {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.angle += this.spin;
+            const ow = canvas.width, oh = canvas.height;
+            if (this.y > oh + 20 || this.x > ow + 20 || this.x < -20 || this.y < -20) {
+                this.reset();
+            }
+        }
+    }
+    draw() {
+        ctx2d.save();
+        ctx2d.translate(this.x, this.y);
+        ctx2d.globalAlpha = this.opacity;
+        if (this.type === 'leaf') {
+            ctx2d.rotate(this.angle);
+            ctx2d.fillStyle = '#81c784';
+            ctx2d.beginPath();
+            ctx2d.ellipse(0, 0, this.size, this.size / 2, 0, 0, Math.PI * 2);
+            ctx2d.fill();
+        } else if (this.type === 'dust') {
+            ctx2d.fillStyle = '#ffb300';
+            ctx2d.shadowColor = '#ffb300';
+            ctx2d.shadowBlur = 5;
+            ctx2d.beginPath();
+            ctx2d.arc(0, 0, this.size, 0, Math.PI * 2);
+            ctx2d.fill();
+        } else if (this.type === 'firefly') {
+            ctx2d.fillStyle = '#a8e6cf';
+            ctx2d.shadowColor = '#a8e6cf';
+            ctx2d.shadowBlur = 10;
+            ctx2d.beginPath();
+            ctx2d.arc(0, 0, this.size, 0, Math.PI * 2);
+            ctx2d.fill();
+        }
+        ctx2d.restore();
+    }
+}
+
+let particles = [];
+if (!prefersReduced) {
+    for (let i = 0; i < LEAF_COUNT; i++) particles.push(new EffectParticle('leaf'));
+    for (let i = 0; i < DUST_COUNT; i++) particles.push(new EffectParticle('dust'));
+    for (let i = 0; i < FIRE_COUNT; i++) particles.push(new EffectParticle('firefly'));
+}
+
+function animate() {
+    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+}
+animate();
+
+/* ============================================================
+   BUTTON INTERACTIONS
+   Use pointerdown so both mouse and touch are covered.
+   ============================================================ */
+document.querySelectorAll('.btn-menu').forEach(btn => {
+    // Hover sound on pointerenter (desktop) or touchstart (touch)
+    btn.addEventListener('pointerenter', () => {
+        if (!btn.classList.contains('locked')) playHoverSound();
+    });
+    // Click / tap
+    btn.addEventListener('pointerdown', (e) => {
+        if (btn.classList.contains('locked')) {
+            e.preventDefault();
+            playSynth(120, 0.2, 'sawtooth');
+            return;
+        }
+        playClickSound();
+    });
+    // Keyboard activation
+    btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            if (!btn.classList.contains('locked')) playClickSound();
+        }
+    });
+});
+
+/* ============================================================
+   PROGRESS FROM localStorage
+   ============================================================ */
+const storedProgress = localStorage.getItem('progress_belajar') || '0%';
+document.getElementById('progressValue').textContent = storedProgress;
+</script>
+</body>
+</html>

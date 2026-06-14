@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lentera Meuseuraya - Petualangan Energi Terbarukan</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+body {
+    width: 100%;
+    min-height: 100dvh;
+    overflow-x:hidden;
+    overflow-y:auto;
+    background-color: #2b170c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+/* Fullscreen Background with Zoom & Parallax */
+.bg-wrapper {
+    position: absolute;
+    inset: -20px; /* offset for parallax overflow */
+    background: url('/assets/background/background rumah aceh.png') center/cover no-repeat;
+    background-size: cover;
+    z-index: 1;
+    transform: scale(1.05);
+    animation: backgroundZoom 12s ease-out forwards;
+    transition: transform 0.1s ease-out;
+}
+@keyframes backgroundZoom {
+    from { transform: scale(1.06); }
+    to { transform: scale(1.02); }
+}
+.bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(75, 45, 29, 0.35) 0%, rgba(43, 23, 12, 0.6) 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+/* Sunlight Conic Rays */
+.sun-rays {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-conic-gradient(from 0deg, rgba(255, 235, 59, 0.05) 0deg 15deg, transparent 15deg 30deg);
+    animation: rotateRays 50s linear infinite;
+    pointer-events: none;
+    z-index: 3;
+}
+@keyframes rotateRays {
+    to { transform: rotate(360deg); }
+}
+/* Canvas overlay for Floating Leaves and Particles */
+#effectsCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 4;
+}
+/* Screen Transitions */
+.transition-overlay {
+    position: fixed;
+    inset: 0;
+    background: #4b2d1d;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease-in-out;
+}
+.transition-overlay.fade-out {
+    opacity: 1;
+    pointer-events: auto;
+}
+/* Main UI Container */
+.main-container {
+    position: relative;
+    z-index: 10;
+    width: min(90vw, 850px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    animation: fadeInUp 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+@keyframes fadeInUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+/* Game Logo/Title styling */
+.game-title-wrap {
+    margin-bottom: 40px;
+    animation: floatingLogo 4s ease-in-out infinite alternate;
+}
+@keyframes floatingLogo {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-10px); }
+}
+.game-title {
+    color: #ffd54f;
+    font-size: clamp(2.8rem, 6vw, 5.2rem);
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 
+        0 4px 0 #5b341f, 
+        0 8px 0 #3e2723, 
+        0 12px 20px rgba(0, 0, 0, 0.6),
+        0 0 15px rgba(255, 213, 79, 0.4);
+    line-height: 1;
+    margin-bottom: 12px;
+}
+.game-subtitle {
+    color: #f6ead0;
+    font-size: clamp(0.95rem, 2vw, 1.35rem);
+    font-weight: 600;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+    max-width: 650px;
+    margin: 0 auto;
+    letter-spacing: 0.5px;
+}
+/* Start Button - Premium Wooden Plaque Style */
+.start-btn {
+    width: clamp(200px, 30vw, 290px);
+    height: clamp(65px, 8vw, 85px);
+    border-radius: 40px;
+    border: 4px solid #5b341f;
+    background: linear-gradient(to bottom, #ffd54f 0%, #ffb300 100%);
+    box-shadow: 
+        0 0 0 4px #f6ead0, 
+        0 8px 20px rgba(0,0,0,0.5), 
+        inset 0 3px 0 rgba(255,255,255,0.4);
+    color: #3e2723;
+    font-size: clamp(20px, 2.5vw, 28px);
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    position: relative;
+    z-index: 15;
+    animation: buttonPulse 1.8s infinite alternate;
+}
+.start-btn:hover {
+    transform: scale(1.06) translateY(-4px);
+    background: linear-gradient(to bottom, #ffe082 0%, #ffc107 100%);
+    box-shadow: 
+        0 0 0 4px #f6ead0, 
+        0 12px 24px rgba(0,0,0,0.6), 
+        0 0 15px rgba(255, 213, 79, 0.8),
+        inset 0 3px 0 rgba(255,255,255,0.4);
+}
+.start-btn:active {
+    transform: scale(0.98) translateY(2px);
+    box-shadow: 
+        0 0 0 3px #f6ead0, 
+        0 4px 10px rgba(0,0,0,0.4), 
+        inset 0 1px 0 rgba(255,255,255,0.2);
+}
+@keyframes buttonPulse {
+    0% { box-shadow: 0 0 0 4px #f6ead0, 0 8px 20px rgba(0,0,0,0.5), 0 0 10px rgba(255, 213, 79, 0.2); }
+    100% { box-shadow: 0 0 0 4px #f6ead0, 0 8px 20px rgba(0,0,0,0.5), 0 0 25px rgba(255, 213, 79, 0.6); }
+}
+/* Mascot - Cheerful Acehnese Student */
+@media(max-width:768px){
+
+.mascot-container{
+    position:relative;
+    right:auto;
+    bottom:auto;
+    margin-top:20px;
+}
+
+}
+/* Speech Bubble */
+.speech-bubble {
+    background: #fffdf6;
+    border: 4px solid #5b341f;
+    border-radius: 14px;
+    padding: 10px 14px;
+    color: #49352b;
+    font-weight: 800;
+    font-size: 0.85rem;
+    position: relative;
+    max-width: 200px;
+    text-align: center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: popBubble 0.5s ease-out 1.2s forwards, breatheMascot 4s ease-in-out infinite alternate;
+}
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    right: 40px;
+    border-width: 14px 12px 0;
+    border-style: solid;
+    border-color: #5b341f transparent;
+    display: block;
+    width: 0;
+}
+.speech-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 42px;
+    border-width: 12px 10px 0;
+    border-style: solid;
+    border-color: #fffdf6 transparent;
+    display: block;
+    width: 0;
+    z-index: 2;
+}
+@keyframes popBubble {
+    from { transform: scale(0.6) translateY(10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+/* SVG Mascot structure & animations */
+.mascot-svg {
+    width: 140px;
+    height: 180px;
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,0.35));
+    animation: breatheMascot 4s ease-in-out infinite alternate;
+    transform-origin: bottom center;
+}
+@keyframes breatheMascot {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-5px) scaleY(1.02); }
+}
+.mascot-eye {
+    animation: blinkEyes 4.5s infinite;
+}
+@keyframes blinkEyes {
+    0%, 90%, 100% { transform: scaleY(1); }
+    95% { transform: scaleY(0.1); }
+}
+.mascot-hand {
+    animation: waveHand 2.2s ease-in-out infinite alternate;
+    transform-origin: 35px 125px; /* origin coordinates near shoulder */
+}
+@keyframes waveHand {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(12deg); }
+}
+/* Floating Renewable Energy Icons */
+.float-icon {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    fill: #ffd54f;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0.8;
+}
+/* Dynamic floats */
+.fi-1 { top: 12%; left: 15%; animation: floatSlow 8s ease-in-out infinite alternate; }
+.fi-2 { top: 75%; left: 10%; animation: floatSlow 10s ease-in-out infinite alternate; }
+.fi-3 { top: 18%; right: 15%; animation: floatSlow 9s ease-in-out infinite alternate; }
+.fi-4 { top: 70%; right: 25%; animation: floatSlow 7s ease-in-out infinite alternate; }
+@keyframes floatSlow {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-15px) rotate(8deg); }
+}
+/* Music indicator popup / mute toggle button */
+.audio-ctrl {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(75, 45, 29, 0.85);
+    border: 3px solid #ffd54f;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.2s ease;
+}
+.audio-ctrl:hover {
+    transform: scale(1.1);
+}
+.audio-ctrl svg {
+    width: 22px;
+    height: 22px;
+    fill: #ffd54f;
+}
+/* RESPONSIVE DESIGN */
+@media (max-width: 900px) {
+    .mascot-container {
+        position: relative;
+        bottom: 0;
+        right: 0;
+        margin-top: 35px;
+        align-self: center;
+    }
+    .speech-bubble {
+        margin-bottom: 8px;
+    }
+    .main-container {
+        justify-content: center;
+        min-height: 100vh;
+        padding: 40px 20px;
+    }
+}
+@media (max-width: 480px) {
+    .game-title {
+        font-size: clamp(2.3rem, 11vw, 3.5rem);
+    }
+    .game-subtitle {
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+    .float-icon {
+        width: 38px;
+        height: 38px;
+    }
+    .mascot-svg {
+        width: 110px;
+        height: 140px;
+    }
+}
+</style>
+</head>
+<body>
+    <!-- Transition overlay for clicking Start -->
+    <div class="transition-overlay" id="transitionOverlay"></div>
+    <!-- Conic sun rays -->
+    <div class="sun-rays"></div>
+    <!-- Parallax background wrapper -->
+    <div class="bg-wrapper" id="parallaxBg">
+        <div class="bg-overlay"></div>
+    </div>
+    <!-- Ambient Floating Canvas -->
+    <canvas id="effectsCanvas"></canvas>
+    <!-- Floating energy symbols -->
+    <!-- Solar panel -->
+    <svg class="float-icon fi-1" viewBox="0 0 24 24"><path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M19 11H13V5H19V11M11 5V11H5V5H11M5 13H11V19H5V13M13 19V13H19V19H13Z"/></svg>
+    <!-- Lightbulb -->
+    <svg class="float-icon fi-2" viewBox="0 0 24 24"><path d="M12,2A7,7 0 0,0 5,9C5,11.38 6.08,13.5 7.79,14.91C8.75,15.7 9,16.24 9,17V19A2,2 0 0,0 11,21H13A2,2 0 0,0 15,19V17C15,16.24 15.25,15.7 16.21,14.91C17.92,13.5 19,11.38 19,9A7,7 0 0,0 12,2M11,6V8H13V6H11M11,10V12H13V10H11M9,14.58V13.08L10.5,11.58V14.58H9M15,14.58H13.5V11.58L15,13.08V14.58Z"/></svg>
+    <!-- Sun -->
+    <svg class="float-icon fi-3" viewBox="0 0 24 24"><path d="M12,18C11.11,18 10.26,17.8 9.5,17.45L11.56,13.88C11.7,13.96 11.85,14 12,14A2,2 0 0,0 14,12C14,11.85 13.96,11.7 13.88,11.56L17.45,9.5C17.8,10.26 18,11.11 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"/></svg>
+    <!-- Leaf -->
+    <svg class="float-icon fi-4" viewBox="0 0 24 24"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L7.33,18C10,19 14,17 17,14C20,11 21,7 21,7C21,7 19.8,7.3 17,8M17,14C14.33,14 11.24,11.24 9,9C11.24,11.24 14.33,14 17,14Z"/></svg>
+    <!-- Mute / Unmute Button -->
+    <div class="audio-ctrl" id="audioToggle" title="Matikan/Nyalakan Suara">
+        <!-- Speaker Icon -->
+        <svg id="audioIcon" viewBox="0 0 24 24">
+            <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18.03,19.86 21,16.28 21,12C21,7.72 18.03,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
+        </svg>
+    </div>
+    <!-- Main Container UI -->
+    <div class="main-container">
+        
+        <div class="game-title-wrap">
+            <h1 class="game-title">Lentera Meuseuraya</h1>
+            <p class="game-subtitle">Belajar Energi Terbarukan Melalui Petualangan Interaktif di Rumah Aceh</p>
+        </div>
+        <button class="start-btn" id="startBtn">MULAI</button>
+        <!-- Mascot Container -->
+        <div class="mascot-container">
+            <div class="speech-bubble">Halo! Yuk belajar energi terbarukan!</div>
+            
+            <!-- Inline SVG Student Mascot -->
+            <svg class="mascot-svg" viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+                <!-- Hair/Headcloth (Kupiah Meukeutop base) -->
+                <path d="M 35 32 Q 60 10 85 32 Q 95 62 85 62 Q 60 62 35 62 Z" fill="#b02a2a"/>
+                <path d="M 40 30 Q 60 18 80 30 L 78 40 Q 60 28 42 40 Z" fill="#ffd54f"/>
+                <path d="M 43 42 Q 60 34 77 42 L 75 52 Q 60 44 45 52 Z" fill="#2e7d32"/>
+                
+                <!-- Face -->
+                <path d="M 38 52 Q 60 90 82 52 L 80 50 Q 60 72 40 50 Z" fill="#ffcc80"/>
+                <circle cx="60" cy="50" r="23" fill="#ffcc80" />
+                
+                <!-- Blinking Eyes -->
+                <g class="mascot-eye" style="transform-origin: 50px 48px;">
+                    <circle cx="50" cy="48" r="3" fill="#3e2723"/>
+                </g>
+                <g class="mascot-eye" style="transform-origin: 70px 48px;">
+                    <circle cx="70" cy="48" r="3" fill="#3e2723"/>
+                </g>
+                
+                <!-- Cheeks (Blush) -->
+                <circle cx="45" cy="54" r="3" fill="#ff8a80" opacity="0.6"/>
+                <circle cx="75" cy="54" r="3" fill="#ff8a80" opacity="0.6"/>
+                
+                <!-- Cheerful Smile -->
+                <path d="M 54 57 Q 60 63 66 57" fill="none" stroke="#b02a2a" stroke-width="2.5" stroke-linecap="round"/>
+                
+                <!-- Neck -->
+                <rect x="56" y="66" width="8" height="10" fill="#ffbb93" />
+                
+                <!-- Body (Acehnese Traditional School Uniform Shirt) -->
+                <path d="M 30 76 L 90 76 L 85 135 L 35 135 Z" fill="#5d4037" stroke="#3e2723" stroke-width="1.5"/>
+                <!-- Golden collar/buttons -->
+                <path d="M 54 76 L 60 84 L 66 76 Z" fill="#ffd54f"/>
+                <circle cx="60" cy="94" r="2.5" fill="#ffd54f" />
+                <circle cx="60" cy="106" r="2.5" fill="#ffd54f" />
+                
+                <!-- Left Hand (Resting) -->
+                <path d="M 28 76 Q 14 96 22 110" fill="none" stroke="#5d4037" stroke-width="8" stroke-linecap="round"/>
+                <circle cx="21" cy="112" r="5" fill="#ffcc80" />
+                
+                <!-- Right Hand (Waving) -->
+                <g class="mascot-hand">
+                    <path d="M 92 76 Q 112 90 106 108" fill="none" stroke="#5d4037" stroke-width="8" stroke-linecap="round"/>
+                    <circle cx="106" cy="110" r="5" fill="#ffcc80" />
+                </g>
+            </svg>
+        </div>
+    </div>
+<script>
+// Web Audio Synthesizer for Ambient Music & Sound Effects
+const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+// Audio status
+let musicPlaying = false;
+let isMuted = false;
+let sequenceInterval = null;
+// Audio Delay node for Gamelan Reverb echo
+const delay = audioCtx.createDelay(1.0);
+delay.delayTime.value = 0.35;
+const feedback = audioCtx.createGain();
+feedback.gain.value = 0.3;
+delay.connect(feedback);
+feedback.connect(delay);
+// Global gain node for master volume
+const masterGain = audioCtx.createGain();
+masterGain.gain.value = 0.25; // default 25% volume
+masterGain.connect(audioCtx.destination);
+delay.connect(masterGain);
+function playSynth(freq, dur, type='sine', offset=0) {
+    if(isMuted) return;
+    try {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + offset);
+        
+        // Routing through echo/delay node and master output
+        osc.connect(gainNode);
+        gainNode.connect(masterGain);
+        gainNode.connect(delay);
+        
+        osc.start(audioCtx.currentTime + offset);
+        
+        gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime + offset);
+        gainNode.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + offset + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + offset + dur);
+        
+        osc.stop(audioCtx.currentTime + offset + dur + 0.05);
+    } catch(e) {}
+}
+// Pentatonic traditional notes loop (Gamelan style)
+// C5, D5, E5, G5, A5
+const pentatonicScale = [523.25, 587.33, 659.25, 783.99, 880.00];
+const bassNotes = [130.81, 146.83, 164.81, 196.00];
+let step = 0;
+function startBackgroundMusic() {
+    if(musicPlaying) return;
+    musicPlaying = true;
+    
+    // Simple 8-beat sequencer
+    sequenceInterval = setInterval(() => {
+        if(isMuted) return;
+        
+        // Deep gong bass note on beat 0
+        if(step === 0) {
+            playSynth(bassNotes[0], 1.2, 'sine');
+            playSynth(pentatonicScale[0], 0.4, 'triangle');
+        } 
+        // Melodic plucks on other beats
+        else if(step === 2) {
+            playSynth(pentatonicScale[2], 0.3, 'sine');
+        } 
+        else if(step === 3) {
+            playSynth(pentatonicScale[3], 0.2, 'sine');
+        } 
+        else if(step === 4) {
+            playSynth(pentatonicScale[4], 0.4, 'triangle');
+        } 
+        else if(step === 6) {
+            playSynth(pentatonicScale[2], 0.3, 'sine');
+        } 
+        else if(step === 7) {
+            playSynth(pentatonicScale[1], 0.25, 'sine');
+        }
+        
+        step = (step + 1) % 8;
+    }, 250); // 100 BPM (250ms per beat)
+}
+function playHoverSound() {
+    // Soft high-pitch triangle beep
+    playSynth(880, 0.08, 'triangle');
+}
+function playClickSound() {
+    // Resonant gong sound
+    if(isMuted) return;
+    try {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(masterGain);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(55, audioCtx.currentTime + 1.2);
+        osc.start();
+        gainNode.gain.setValueAtTime(0.6, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.2);
+        osc.stop(audioCtx.currentTime + 1.25);
+    } catch(e) {}
+}
+// Canvas Leaf & Glowing Dust animation
+const canvas = document.getElementById('effectsCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+class Particle {
+    constructor(type) {
+        this.type = type; // 'leaf' or 'dust'
+        this.reset();
+    }
+    reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = this.type === 'leaf' ? -20 : canvas.height + 20;
+        this.size = this.type === 'leaf' ? Math.random() * 8 + 8 : Math.random() * 3 + 2;
+        this.speedX = this.type === 'leaf' ? Math.random() * 1.5 + 0.5 : Math.random() * 0.6 - 0.3;
+        this.speedY = this.type === 'leaf' ? Math.random() * 1.2 + 0.8 : -(Math.random() * 0.8 + 0.4);
+        this.angle = Math.random() * Math.PI * 2;
+        this.spin = Math.random() * 0.02 - 0.01;
+        this.opacity = Math.random() * 0.5 + 0.3;
+    }
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.angle += this.spin;
+        
+        // Reset if off screen
+        if (this.y > canvas.height + 20 || this.x > canvas.width + 20 || this.x < -20 || this.y < -20) {
+            this.reset();
+        }
+    }
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.globalAlpha = this.opacity;
+        if (this.type === 'leaf') {
+            ctx.rotate(this.angle);
+            ctx.fillStyle = '#66bb6a'; // warm leaf green
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.size, this.size / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // stem line
+            ctx.strokeStyle = '#2e7d32';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-this.size, 0);
+            ctx.lineTo(this.size, 0);
+            ctx.stroke();
+        } else {
+            // glowing gold dust particle
+            ctx.fillStyle = '#ffd54f';
+            ctx.shadowColor = '#ffd54f';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+// Populate particles
+for (let i = 0; i < 20; i++) particles.push(new Particle('leaf'));
+for (let i = 0; i < 25; i++) particles.push(new Particle('dust'));
+function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
+    requestAnimationFrame(animateParticles);
+}
+animateParticles();
+// Parallax background movement on mousemove
+const parallaxBg = document.getElementById('parallaxBg');
+document.addEventListener('mousemove', (e) => {
+    const moveX = (e.clientX - window.innerWidth / 2) * -0.015;
+    const moveY = (e.clientY - window.innerHeight / 2) * -0.015;
+    parallaxBg.style.transform = `scale(1.02) translate(${moveX}px, ${moveY}px)`;
+});
+// Trigger Audio Play on first interaction
+function triggerAudioOnInteraction() {
+    if(audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    startBackgroundMusic();
+}
+document.addEventListener('click', triggerAudioOnInteraction, { once: true });
+document.addEventListener('keydown', triggerAudioOnInteraction, { once: true });
+// Start Button click & redirect sequence
+const startBtn = document.getElementById('startBtn');
+const transitionOverlay = document.getElementById('transitionOverlay');
+startBtn.addEventListener('mouseenter', playHoverSound);
+startBtn.addEventListener('click', () => {
+    playClickSound();
+    
+    // Play button press animation
+    startBtn.style.transform = 'scale(0.95)';
+    
+    // Start fullscreen fade transition
+    setTimeout(() => {
+        transitionOverlay.classList.add('fade-out');
+        
+        // Wait for fade transition, then navigate
+        setTimeout(() => {
+            window.location.href = '/station/index.html';
+        }, 850);
+    }, 150);
+});
+// Sound toggle button interaction
+const audioToggle = document.getElementById('audioToggle');
+const audioIcon = document.getElementById('audioIcon');
+audioToggle.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent triggerAudioOnInteraction
+    isMuted = !isMuted;
+    
+    if (isMuted) {
+        audioIcon.innerHTML = `
+            <path d="M12,4L9.91,6.09L12,8.18M19,12C19,11.38 18.89,10.79 18.68,10.23L20.21,8.7C20.72,9.7 21,10.82 21,12C21,16.28 18.03,19.86 14,20.77V18.71C16.89,17.85 19,15.17 19,12M3,2.27L4.27,1L21,17.73L19.73,19L15,14.27V20L10,15H6V9H9.73L3,2.27M12,4V9.27L9.7,6.97L12,4M16.5,12C16.5,11.13 16.09,10.36 15.46,9.83L17.02,8.27C17.95,9.22 18.5,10.55 18.5,12C18.5,13.45 17.95,14.78 17.02,15.73L15.46,14.17C16.09,13.64 16.5,12.87 16.5,12M12,11.27L14.73,14H12V11.27Z"/>
+        `;
+        masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+    } else {
+        audioIcon.innerHTML = `
+            <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18.03,19.86 21,16.28 21,12C21,7.72 18.03,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.77 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
+        `;
+        masterGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        if(audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        startBackgroundMusic();
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eksperimen PLTS Interaktif</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: url('/assets/background/simulasi_bg.png') center/cover no-repeat;
+    background-color: #2b170c;
+    display: flex;
+    flex-direction: column;
+}
+.wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+/* Header bar */
+.top-wood {
+    width: 100%;
+    height: 64px;
+    background: #4b2d1d;
+    box-shadow: 0 6px 14px rgba(0,0,0,.35);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 100;
+}
+.top-wood .title {
+    color: #f6ecd9;
+    font-weight: 800;
+    font-size: 1.15rem;
+}
+.top-wood .score-badge {
+    background: #5f7c2f;
+    border: 2px solid #d6b53f;
+    border-radius: 6px;
+    color: white;
+    padding: 4px 12px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+/* Main Grid Layout */
+.main-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+    position: relative;
+}
+/* Left Sidebar - Misi List */
+.sidebar {
+    background: rgba(75, 45, 29, 0.95);
+    border-right: 6px solid #5b341f;
+    padding: 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 20;
+}
+.sidebar h3 {
+    color: #f6ead0;
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    border-bottom: 2px solid #a67843;
+    padding-bottom: 6px;
+}
+.misi-item {
+    background: rgba(246, 234, 208, 0.15);
+    border: 2px solid #a67843;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #f6ead0;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+.misi-item:hover {
+    background: rgba(246, 234, 208, 0.3);
+    transform: translateX(4px);
+}
+.misi-item.active {
+    background: #eed7ac;
+    color: #49352b;
+    border-color: #5b341f;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+.misi-item.completed::after {
+    content: "✓";
+    color: #8bc34a;
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+.misi-item.completed.active::after {
+    color: #2e7d32;
+}
+/* Right Play Area */
+.play-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+/* Night Overlay filter */
+.night-filter {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 30, 0.85);
+    mix-blend-mode: multiply;
+    z-index: 4;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+.body-night .night-filter {
+    opacity: 1;
+}
+/* Sky Area (Sun/Clouds) */
+.sky-area {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.sun {
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, #ffeb3b 30%, #ff9800 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 30px #ffeb3b;
+    transition: all 0.5s ease;
+}
+.cloud {
+    width: 80px;
+    height: 40px;
+    background: rgba(240, 240, 240, 0.9);
+    border-radius: 20px;
+    position: absolute;
+    top: 10px;
+    left: 40px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.5s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: rgba(240, 240, 240, 0.9);
+    border-radius: 50%;
+}
+.cloud::before {
+    width: 40px;
+    height: 40px;
+    top: -20px;
+    left: 15px;
+}
+.cloud::after {
+    width: 30px;
+    height: 30px;
+    top: -15px;
+    left: 40px;
+}
+/* Interactive Tree */
+.tree {
+    position: absolute;
+    bottom: 25%;
+    left: -150px;
+    width: 140px;
+    height: 200px;
+    background: transparent;
+    z-index: 25;
+    transition: left 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+    pointer-events: none;
+}
+.tree-foliage {
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, #4caf50 50%, #2e7d32 100%);
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    position: relative;
+}
+.tree-trunk {
+    width: 24px;
+    height: 80px;
+    background: #5d4037;
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 4px;
+}
+/* House Area Container */
+.house-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 6;
+}
+.house-area {
+    position: relative;
+    width: 100%;
+    max-width: 680px;
+    aspect-ratio: 760 / 600;
+}
+.house-area img.rumah-bg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+/* SVG Cables */
+.wires-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+}
+.flow-line {
+    stroke-dasharray: 12, 6;
+    animation: dashFlow 1.2s linear infinite;
+    transition: stroke 0.3s ease;
+}
+@keyframes dashFlow {
+    to { stroke-dashoffset: -36; }
+}
+/* Component Nodes */
+.component-node {
+    position: absolute;
+    z-index: 20;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.component-image-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.component-image {
+    max-width: 85%;
+    max-height: 85%;
+    object-fit: contain;
+    transition: filter 0.3s ease;
+}
+.component-name {
+    margin-top: 2px;
+    font-size: 9px;
+    font-weight: 800;
+    color: white;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0,0,0,.8);
+    background: rgba(75, 45, 29, 0.85);
+    padding: 1px 3px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+/* Coordinates matching other steps */
+.component-node[data-name="panel"] { width: 22%; height: 14%; top: 12%; left: 50%; transform: translateX(-50%); }
+.component-node[data-name="lamp"] { width: 10%; height: 15%; top: 34%; left: 50%; transform: translateX(-50%); }
+.component-node[data-name="scc"] { width: 15%; height: 12%; top: 54%; left: 50%; transform: translateX(-50%); }
+.component-node[data-name="mcb"] { width: 9%; height: 10%; top: 54%; left: 64%; }
+.component-node[data-name="spd"] { width: 9%; height: 10%; top: 54%; left: 74%; }
+.component-node[data-name="battery"] { width: 16%; height: 12%; top: 72%; left: 36%; }
+.component-node[data-name="inverter"] { width: 15%; height: 12%; top: 72%; left: 56%; }
+/* Battery blinking warning */
+@keyframes blinkRed {
+    0%, 100% { outline: none; background: transparent; }
+    50% { outline: 4px solid #f44336; background: rgba(244, 67, 54, 0.25); }
+}
+.blink-warning {
+    animation: blinkRed 0.6s infinite;
+    border-radius: 8px;
+}
+/* Warnings overlay (SCC) */
+.warning-icon {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 28px;
+    height: 28px;
+    background: #ff3b30;
+    border: 2px solid white;
+    border-radius: 50%;
+    color: white;
+    font-weight: 800;
+    font-size: 16px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    animation: scaleBlink 0.8s infinite alternate;
+}
+@keyframes scaleBlink {
+    0% { transform: scale(0.9); }
+    100% { transform: scale(1.1); }
+}
+/* Info & Telemetry Bar */
+.telemetry-bar {
+    width: 100%;
+    background: rgba(246, 234, 208, 0.95);
+    border: 6px solid #5b341f;
+    border-radius: 12px;
+    padding: 14px 20px;
+    color: #49352b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    z-index: 10;
+}
+.telemetry-text {
+    font-weight: 700;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    flex: 1;
+}
+.energy-progress-container {
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.progress-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #8b5e34;
+    display: flex;
+    justify-content: space-between;
+}
+.progress-bar-bg {
+    width: 100%;
+    height: 14px;
+    background: rgba(75, 45, 29, 0.15);
+    border-radius: 7px;
+    overflow: hidden;
+    border: 1.5px solid #a67843;
+}
+.progress-bar-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #8bc34a, #4caf50);
+    transition: width 0.5s ease;
+}
+/* Question Popup Overlay (Tebak Hasil) */
+.quest-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.quest-card {
+    width: min(500px, 90vw);
+    background: #fffdf6;
+    border: 8px solid #d0b07a;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    color: #3b2d22;
+    animation: slideUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.quest-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #5b341f;
+    border-bottom: 2px dashed #d0b07a;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.quest-text {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 18px;
+}
+.quest-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.quest-btn {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #a67843;
+    background: rgba(255,255,255,0.7);
+    border-radius: 8px;
+    text-align: left;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #49352b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.quest-btn:hover {
+    background: #fff;
+    border-color: #5b341f;
+    transform: translateX(4px);
+}
+.quest-btn.correct { background: #e8f5e9; border-color: #4caf50; color: #2e7d32; }
+.quest-btn.incorrect { background: #ffebee; border-color: #f44336; color: #c62828; }
+.quest-feedback {
+    margin-top: 15px;
+    font-weight: 800;
+    text-align: center;
+    font-size: 1.1rem;
+    display: none;
+}
+.quest-feedback.correct-text { color: #2e7d32; }
+.quest-feedback.incorrect-text { color: #c62828; }
+/* Interactive Controls (Slider Tree / Cuaca buttons) */
+.interact-controls {
+    margin-top: 10px;
+    display: none;
+    gap: 12px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid #a67843;
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: white;
+}
+.control-btn {
+    background: #b07a3a;
+    border: none;
+    color: white;
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    transition: all 0.2s ease;
+}
+.control-btn:hover {
+    background: #c58c48;
+}
+/* Lightning strike effect */
+.lightning-flash {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0);
+    z-index: 30;
+    pointer-events: none;
+}
+@keyframes flashScreen {
+    0%, 100% { background-color: rgba(255, 255, 255, 0); }
+    15%, 45% { background-color: rgba(255, 255, 255, 0.95); }
+    30%, 60% { background-color: rgba(200, 220, 255, 0.85); }
+}
+.animate-lightning {
+    animation: flashScreen 0.7s ease-out;
+}
+.lightning-bolt {
+    position: absolute;
+    top: 0;
+    left: 45%;
+    width: 60px;
+    height: 200px;
+    fill: #ffeb3b;
+    filter: drop-shadow(0 0 20px #ffeb3b);
+    z-index: 28;
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: all 0.1s ease;
+}
+.lightning-bolt.strike {
+    opacity: 1;
+    transform: scaleY(1);
+}
+/* Certificate Screen */
+.cert-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 23, 12, 0.95);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.cert-card {
+    width: min(560px, 90vw);
+    background: #fffdf6;
+    border: 12px double #d0b07a;
+    border-radius: 20px;
+    padding: 36px 24px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    color: #3b2d22;
+    animation: zoomIn 0.5s ease-out;
+}
+.cert-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #b07a3a;
+    margin-bottom: 5px;
+}
+.cert-subtitle {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #795548;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 25px;
+}
+.cert-recipient {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #2e7d32;
+    margin: 15px 0;
+    border-bottom: 2px solid #a67843;
+    display: inline-block;
+    padding: 0 20px 6px 20px;
+}
+.cert-details {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+.cert-badge {
+    width: 110px;
+    height: 110px;
+    background: #d0b07a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+    border: 4px solid white;
+}
+.cert-badge svg {
+    width: 60px;
+    height: 60px;
+    fill: white;
+}
+/* RESPONSIVE DESIGN */
+@media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        height: 140px;
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 6px solid #5b341f;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        gap: 12px;
+        padding: 12px;
+    }
+    .sidebar h3 { display: none; }
+    .misi-item {
+        display: inline-flex;
+        flex-shrink: 0;
+        width: 160px;
+        height: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+    .misi-item.completed::after {
+        margin-left: 6px;
+    }
+    .play-area {
+        height: calc(100vh - 64px - 140px);
+        padding: 12px;
+    }
+}
+@media (max-width: 480px) {
+    .sidebar {
+        height: 100px;
+        padding: 8px;
+    }
+    .misi-item {
+        width: 130px;
+        font-size: 0.75rem;
+    }
+    .telemetry-bar {
+        padding: 8px 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .energy-progress-container {
+        width: 100%;
+    }
+    .telemetry-text { font-size: 0.8rem; }
+    .sun { width: 40px; height: 40px; }
+    .cloud { width: 60px; height: 30px; left: 30px; }
+}
+</style>
+</head>
+<body>
+<div class="wrapper" id="appWrapper">
+    <!-- Lightning Flash Overlay -->
+    <div class="lightning-flash" id="flash-overlay"></div>
+    <!-- Night filter -->
+    <div class="night-filter"></div>
+    <div class="top-wood">
+        <div class="title">EKSPERIMEN PLTS INTERAKTIF</div>
+        <div class="score-badge">Poin Eksplorasi: <span id="poi-count">0</span> / 80</div>
+    </div>
+    <div class="main-content">
+        <!-- Sidebar Selection -->
+        <div class="sidebar">
+            <h3>DAFTAR INVESTIGASI</h3>
+            <div class="misi-item" data-id="1">1. Panel Surya Dilepas</div>
+            <div class="misi-item" data-id="2">2. SCC Dilepas</div>
+            <div class="misi-item" data-id="3">3. Baterai Dilepas</div>
+            <div class="misi-item" data-id="4">4. Inverter Dilepas</div>
+            <div class="misi-item" data-id="5">5. MCB & SPD Dilepas</div>
+            <div class="misi-item" data-id="6">6. Pohon Geser (Shading)</div>
+            <div class="misi-item" data-id="7">7. Cuaca Mendung</div>
+            <div class="misi-item" data-id="8">8. Tebak Hasil Khusus</div>
+        </div>
+        <!-- Main Simulation Area -->
+        <div class="play-area">
+            <!-- Sky (Sun/Clouds) -->
+            <div class="sky-area">
+                <div class="sun" id="sun-element"></div>
+                <div class="cloud" id="cloud-element"></div>
+            </div>
+            <!-- Lightning bolt SVG -->
+            <svg class="lightning-bolt" id="lightning-element" viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="50,0 20,100 45,100 15,200 80,90 55,90" />
+            </svg>
+            <!-- Tree (Shading) -->
+            <div class="tree" id="tree-element">
+                <div class="tree-foliage"></div>
+                <div class="tree-trunk"></div>
+            </div>
+            <!-- House Area -->
+            <div class="house-container">
+                <div class="house-area">
+                    <img src="/assets/rumah/rumah_luar.png" class="rumah-bg" alt="Rumah Aceh">
+                    <!-- Cables SVG with flowing energy effects -->
+                    <svg class="wires-svg" viewBox="0 0 760 600" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Curve Panel to MCB -->
+                        <path d="M 380 114 Q 450 230 517 354" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                        <path id="wire-1" d="M 380 114 Q 450 230 517 354" class="flow-line" fill="none" stroke="#ffe082" stroke-width="2.5" stroke-linecap="round"/>
+                        
+                        <!-- Line MCB to SPD -->
+                        <path d="M 520 354 L 593 354" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                        <path id="wire-2" d="M 520 354 L 593 354" class="flow-line" fill="none" stroke="#ffe082" stroke-width="2.5" stroke-linecap="round"/>
+                        
+                        <!-- Curve SPD to SCC -->
+                        <path d="M 593 354 Q 486 360 380 360" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                        <path id="wire-3" d="M 593 354 Q 486 360 380 360" class="flow-line" fill="none" stroke="#ffe082" stroke-width="2.5" stroke-linecap="round"/>
+                        
+                        <!-- Curve SCC to Battery -->
+                        <path d="M 380 360 Q 357 414 334 468" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                        <path id="wire-4" d="M 380 360 Q 357 414 334 468" class="flow-line" fill="none" stroke="#ff8f00" stroke-width="2.5" stroke-linecap="round"/>
+                        
+                        <!-- Line Battery to Inverter -->
+                        <path d="M 334 468 L 483 468" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                        <path id="wire-5" d="M 334 468 L 483 468" class="flow-line" fill="none" stroke="#ffe082" stroke-width="2.5" stroke-linecap="round"/>
+                        
+                        <!-- Curve Inverter to Lamp -->
+                        <path d="M 483 468 Q 431 358 380 249" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+                        <path id="wire-6" d="M 483 468 Q 431 358 380 249" class="flow-line" fill="none" stroke="#ffd54f" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                    <!-- Components -->
+                    <div class="component-node" data-name="panel" id="node-panel">
+                        <div class="component-image-wrap">
+                            <img src="/assets/component/panel surya.png" class="component-image" alt="Panel Surya">
+                            <div class="component-name">Panel Surya</div>
+                        </div>
+                    </div>
+                    <div class="component-node" data-name="lamp" id="node-lamp">
+                        <div class="component-image-wrap">
+                            <img src="/assets/component/lampu_on.png" class="component-image" alt="Lampu">
+                            <div class="component-name">Lampu</div>
+                        </div>
+                    </div>
+                    <div class="component-node" data-name="scc" id="node-scc">
+                        <div class="component-image-wrap">
+                            <img src="/assets/component/SCC.png" class="component-image" alt="SCC">
+                            <div class="warning-icon" id="scc-warning">!</div>
+                            <div class="component-name">SCC</div>
+                        </div>
+                    </div>
+                    <div class="component-node" data-name="mcb" id="node-mcb">
+                        <div class="component-image-wrap">
+                            <img src="/assets/component/DC mcb.png" class="component-image" alt="MCB">
+                            <div class="component-name">MCB</div>
+                        </div>
+                    </div>
+                    <div class="component-node" data-name="spd" id="node-spd">
+                        <div class="component-image-wrap">
+                            <img src="/assets/component/SPD.png" class="component-image" alt="SPD">
+                            <div class="component-name">SPD</div>
+                        </div>
+                    </div>
+                    <div class="component-node" data-name="battery" id="node-battery">
+                        <div class="component-image-wrap">
+                            <img src="/assets/component/BATERAI.png" class="component-image" alt="Baterai">
+                            <div class="component-name">Baterai</div>
+                        </div>
+                    </div>
+                    <div class="component-node" data-name="inverter" id="node-inverter">
+                        <div class="component-image-wrap">
+                            <img src="/assets/component/INVERTER.png" class="component-image" alt="Inverter">
+                            <div class="component-name">Inverter</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Extra Dynamic Controls (Slider/Toggle) -->
+            <div class="interact-controls" id="interact-panel">
+                <span id="interact-label">Kontrol Eksperimen:</span>
+                <button class="control-btn" id="ctrl-action-btn">Aksi</button>
+                <div id="tree-slider-wrap" style="display:none; align-items:center; gap:10px;">
+                    <span style="font-size:12px; font-weight:700;">Jarak Pohon:</span>
+                    <input type="range" id="tree-slider" min="0" max="100" value="0" style="cursor:pointer; width:120px;">
+                </div>
+            </div>
+            <!-- Lower Telemetry HUD -->
+            <div class="telemetry-bar">
+                <div class="telemetry-text" id="status-text">
+                    Silakan pilih salah satu investigasi di panel kiri untuk memulai eksperimen PLTS interaktif.
+                </div>
+                
+                <div class="energy-progress-container">
+                    <div class="progress-label">
+                        <span>Produksi Energi</span>
+                        <strong id="energy-percentage">100%</strong>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="energy-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Question Modal Overlay (Tebak Hasil) -->
+    <div class="quest-overlay" id="quest-modal">
+        <div class="quest-card">
+            <div class="quest-title">
+                <span style="font-size: 1.3rem;">🤔</span> TEBAK HASIL EKSPERIMEN
+            </div>
+            <div class="quest-text" id="quest-question">Apakah yang akan terjadi jika panel surya dilepas?</div>
+            <div class="quest-options" id="quest-options">
+                <!-- Option buttons dynamically generated -->
+            </div>
+            <div class="quest-feedback" id="quest-feedback">Jawaban Benar! +10 Poin Eksplorasi</div>
+        </div>
+    </div>
+    <!-- Final Certificate Overlay -->
+    <div class="cert-overlay" id="cert-modal">
+        <div class="cert-card">
+            <div class="cert-title">SERTIFIKAT KELULUSAN</div>
+            <div class="cert-subtitle">Eksplorasi Energi Terbarukan</div>
+            
+            <div class="cert-badge">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18C8.69,18 6,15.31 6,12C6,10.9 6.3,9.88 6.83,9H17.17C17.7,9.88 18,10.9 18,12C18,15.31 15.31,18 12,18Z"/>
+                </svg>
+            </div>
+            <p style="font-size: 13px; font-weight: 700; color:#8b5e34; text-transform: uppercase;">Diberikan Kepada:</p>
+            <div class="cert-recipient">Teknisi Energi Terbarukan Muda</div>
+            
+            <div class="cert-details">
+                Telah berhasil menyelesaikan seluruh <strong>8 eksperimen investigasi</strong> kerusakan dan pengaruh lingkungan terhadap sistem PLTS di Rumah Aceh.<br>
+                Dengan total skor eksplorasi: <strong style="color:#2e7d32;" id="cert-final-score">80</strong> / 80 Poin.
+            </div>
+            <button class="control-btn" style="background:#5f7c2f; font-size:16px; padding:12px 30px; width:220px; height:auto; margin:0 auto;" onclick="alert('Kembali ke menu utama sekolah/halaman simulasi.'); window.location.href='../station/index.html';">SELESAI</button>
+        </div>
+    </div>
+</div>
+<script>
+// Web Audio Synth setup
+const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+function playSynth(type, freq, duration, gainVal=0.25) {
+    try {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.start();
+        gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(gainVal, audioCtx.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration + 0.05);
+    } catch(e) {}
+}
+// Complex sound effects generator using Web Audio API
+const SoundFX = {
+    playSuccess: () => {
+        // Ding ding ding!
+        playSynth('sine', 523.25, 0.08); // C5
+        setTimeout(() => playSynth('sine', 659.25, 0.08), 80); // E5
+        setTimeout(() => playSynth('sine', 783.99, 0.15), 160); // G5
+    },
+    playError: () => {
+        // Glitch error
+        playSynth('sawtooth', 120, 0.2, 0.3);
+    },
+    playPowerOff: () => {
+        // Sweep down power off sound
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.52);
+        } catch(e) {}
+    },
+    playAlarm: () => {
+        // Dual alarm beep
+        playSynth('square', 800, 0.1, 0.2);
+        setTimeout(() => playSynth('square', 800, 0.1, 0.2), 150);
+    },
+    playJangkrik: () => {
+        // Continuous night cricket sound (runs for 4 seconds in chunks)
+        let count = 0;
+        const interval = setInterval(() => {
+            if(count > 15 || !document.getElementById('appWrapper').classList.contains('body-night')) {
+                clearInterval(interval);
+                return;
+            }
+            playSynth('sine', 3800, 0.05, 0.05);
+            setTimeout(() => playSynth('sine', 3800, 0.05, 0.05), 60);
+            count++;
+        }, 220);
+    },
+    playLightning: () => {
+        // Thunder crash (noise emulation using sweep and low oscillator)
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(30, audioCtx.currentTime + 0.6);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.62);
+        } catch(e) {}
+    },
+    playHum: () => {
+        // Low transformer hum for shading
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 1.25);
+        } catch(e) {}
+    }
+};
+// Simulation States & Scenarios Data
+const missions = {
+    1: {
+        title: "Panel Surya Dilepas",
+        question: "Apa yang terjadi jika panel surya dilepas?",
+        options: [
+            "Lampu menyala lebih terang",
+            "Tidak ada energi yang dihasilkan karena panel surya merupakan sumber utama listrik",
+            "Baterai akan terisi lebih cepat dari angin"
+        ],
+        correct: 1,
+        run: () => {
+            // Animasi: Panel surya hilang, aliran listrik mati, lampu mati
+            document.getElementById('node-panel').style.opacity = '0';
+            stopElectricityFlow();
+            setLampOn(false);
+            setEnergyProduction(0);
+            SoundFX.playPowerOff();
+            updateStatusText("Tidak ada energi yang dihasilkan karena panel surya merupakan sumber utama listrik.");
+        }
+    },
+    2: {
+        title: "SCC Dilepas",
+        question: "Apa akibatnya jika sistem PLTS bekerja tanpa SCC?",
+        options: [
+            "Tegangan naik stabil",
+            "SCC mengatur pengisian baterai. Tanpa SCC, baterai dapat rusak akibat overcharging",
+            "Lampu berubah warna"
+        ],
+        correct: 1,
+        run: () => {
+            // Animasi: SCC hilang, alarm berbunyi, warning muncul, baterai berkedip merah
+            document.getElementById('node-scc').style.opacity = '0';
+            document.getElementById('scc-warning').style.display = 'flex';
+            document.getElementById('node-battery').classList.add('blink-warning');
+            SoundFX.playAlarm();
+            updateStatusText("SCC berfungsi mengatur pengisian baterai. Tanpa SCC, baterai dapat rusak akibat overcharging.");
+        }
+    },
+    3: {
+        title: "Baterai Dilepas",
+        question: "Bagaimana jika Baterai dilepas dari sistem?",
+        options: [
+            "Energi disimpan di Inverter",
+            "Pada malam hari energi tidak dapat disimpan sehingga lampu tidak menyala",
+            "Panel surya akan terbakar"
+        ],
+        correct: 1,
+        run: () => {
+            // Animasi: Hari berubah malam, langit gelap, lampu mati
+            document.getElementById('appWrapper').classList.add('body-night');
+            document.getElementById('node-battery').style.opacity = '0';
+            setLampOn(false);
+            setEnergyProduction(0);
+            stopElectricityFlow();
+            SoundFX.playJangkrik();
+            updateStatusText("Pada malam hari energi tidak dapat disimpan sehingga lampu tidak menyala.");
+        }
+    },
+    4: {
+        title: "Inverter Dilepas",
+        question: "Apa fungsi Inverter pada beban peralatan rumah tangga?",
+        options: [
+            "Inverter diperlukan untuk mengubah listrik DC menjadi AC yang digunakan peralatan rumah",
+            "Menyimpan arus petir",
+            "Mempercepat putaran meteran listrik"
+        ],
+        correct: 0,
+        run: () => {
+            // Animasi: Listrik berhenti di baterai, lampu berkedip lalu mati
+            stopElectricityFlowAtBattery();
+            
+            // Blink lamp then turn off
+            const lampImg = document.querySelector('#node-lamp img');
+            lampImg.src = '/assets/component/lampu_off.png';
+            lampImg.style.filter = 'none';
+            SoundFX.playPowerOff();
+            
+            updateStatusText("Inverter diperlukan untuk mengubah listrik DC menjadi AC yang digunakan peralatan rumah.");
+        }
+    },
+    5: {
+        title: "MCB & SPD Dilepas",
+        question: "Apa risiko melepas MCB dan SPD dari sistem PLTS?",
+        options: [
+            "Tagihan listrik menjadi gratis",
+            "Sistem kehilangan perlindungan terhadap korsleting dan lonjakan tegangan",
+            "Efisiensi panel surya meningkat 50%"
+        ],
+        correct: 1,
+        run: () => {
+            // Animasi: Petir muncul menyambar, lonjakan listrik, lampu berkedip
+            document.getElementById('node-mcb').style.opacity = '0';
+            document.getElementById('node-spd').style.opacity = '0';
+            
+            // Lightning sequence
+            setTimeout(() => {
+                document.getElementById('flash-overlay').classList.add('animate-lightning');
+                document.getElementById('lightning-element').classList.add('strike');
+                SoundFX.playLightning();
+                
+                // Lamp blinks
+                let blinkCount = 0;
+                const blinkInterval = setInterval(() => {
+                    const lampImg = document.querySelector('#node-lamp img');
+                    if (blinkCount % 2 === 0) {
+                        lampImg.src = '/assets/component/lampu_off.png';
+                        lampImg.style.filter = 'none';
+                    } else {
+                        lampImg.src = '/assets/component/lampu_on.png';
+                        lampImg.style.filter = 'drop-shadow(0 0 15px #ffc107)';
+                    }
+                    blinkCount++;
+                    if(blinkCount > 5) {
+                        clearInterval(blinkInterval);
+                        lampImg.src = '/assets/component/lampu_off.png';
+                        lampImg.style.filter = 'none';
+                    }
+                }, 100);
+            }, 600);
+            
+            updateStatusText("Sistem kehilangan perlindungan terhadap korsleting dan lonjakan tegangan akibat lonjakan sirkuit.");
+        }
+    },
+    6: {
+        title: "Pohon Menutupi Panel",
+        question: "Bagaimana efek bayangan pohon (shading) pada produksi energi PLTS?",
+        options: [
+            "Menyaring listrik agar lebih bersih",
+            "Bayangan pohon (shading) mengurangi cahaya yang diterima panel sehingga energi yang dihasilkan menurun",
+            "Membuat panel surya dingin dan bekerja lebih baik"
+        ],
+        correct: 1,
+        run: () => {
+            // Tampilkan slider pohon geser
+            document.getElementById('interact-panel').style.display = 'flex';
+            document.getElementById('ctrl-action-btn').style.display = 'none';
+            document.getElementById('tree-slider-wrap').style.display = 'flex';
+            
+            // Set initial tree position
+            document.getElementById('tree-element').style.left = '5%';
+            updateStatusText("Gunakan slider untuk menggeser pohon mendekati atap Rumah Aceh dan tutupi Panel Surya.");
+        }
+    },
+    7: {
+        title: "Cuaca Mendung",
+        question: "Apakah panel surya masih menghasilkan daya saat mendung?",
+        options: [
+            "Tidak, panel surya langsung mati total",
+            "Panel surya tetap bekerja saat mendung, tetapi energi yang dihasilkan lebih sedikit dibanding cuaca cerah",
+            "Daya listrik naik dua kali lipat dari awan mendung"
+        ],
+        correct: 1,
+        run: () => {
+            // Tampilkan tombol ubah cuaca
+            const actionBtn = document.getElementById('ctrl-action-btn');
+            actionBtn.style.display = 'block';
+            actionBtn.textContent = "☁ Ubah Cuaca";
+            document.getElementById('interact-panel').style.display = 'flex';
+            document.getElementById('tree-slider-wrap').style.display = 'none';
+            
+            updateStatusText("Klik tombol 'Ubah Cuaca' untuk menyimulasikan pengaruh awan mendung pada siang hari.");
+        }
+    },
+    8: {
+        title: "Tebak Hasil Baterai",
+        question: "Apa yang akan terjadi jika baterai dilepas saat malam hari?",
+        options: [
+            "Lampu menyala lebih terang",
+            "Lampu mati saat malam karena tidak ada pasokan listrik cadangan",
+            "Panel surya akan berputar"
+        ],
+        correct: 1,
+        run: () => {
+            // Animasi: Malam hari, baterai hilang, lampu mati
+            document.getElementById('appWrapper').classList.add('body-night');
+            document.getElementById('node-battery').style.opacity = '0';
+            setLampOn(false);
+            setEnergyProduction(0);
+            stopElectricityFlow();
+            SoundFX.playPowerOff();
+            updateStatusText("Misi Terakhir Selesai! Baterai dilepas di malam hari menghentikan pasokan daya ke inverter.");
+        }
+    }
+};
+let explorationPoints = 0;
+let completedMissions = new Set();
+let currentActiveId = null;
+// UI Initialization
+const misiItems = document.querySelectorAll('.misi-item');
+const questModal = document.getElementById('quest-modal');
+const questQuestion = document.getElementById('quest-question');
+const questOptions = document.getElementById('quest-options');
+const questFeedback = document.getElementById('quest-feedback');
+const poiCountEl = document.getElementById('poi-count');
+const treeElement = document.getElementById('tree-element');
+const sunElement = document.getElementById('sun-element');
+const cloudElement = document.getElementById('cloud-element');
+misiItems.forEach(item => {
+    item.addEventListener('click', () => {
+        const id = parseInt(item.dataset.id);
+        startMission(id);
+    });
+});
+function updateStatusText(text) {
+    document.getElementById('status-text').innerHTML = text;
+}
+function setEnergyProduction(pct) {
+    document.getElementById('energy-percentage').textContent = `${pct}%`;
+    document.getElementById('energy-fill').style.width = `${pct}%`;
+}
+function setLampOn(on, dim = false) {
+    const img = document.querySelector('#node-lamp img');
+    if (on) {
+        img.src = '/assets/component/lampu_on.png';
+        if (dim) {
+            img.style.filter = 'drop-shadow(0 0 10px #ffeb3b)';
+        } else {
+            img.style.filter = 'drop-shadow(0 0 20px #ffeb3b)';
+        }
+    } else {
+        img.src = '/assets/component/lampu_off.png';
+        img.style.filter = 'none';
+    }
+}
+function stopElectricityFlow() {
+    for (let i = 1; i <= 6; i++) {
+        const path = document.getElementById(`wire-${i}`);
+        path.style.stroke = '#222';
+        path.classList.remove('flow-line');
+    }
+}
+function stopElectricityFlowAtBattery() {
+    // Stop flow from inverter to lamp
+    const path = document.getElementById('wire-6');
+    path.style.stroke = '#222';
+    path.classList.remove('flow-line');
+}
+function resetVisuals() {
+    // Reset all components
+    const nodes = document.querySelectorAll('.component-node');
+    nodes.forEach(n => {
+        n.style.opacity = '1';
+        n.classList.remove('blink-warning');
+    });
+    
+    document.getElementById('scc-warning').style.display = 'none';
+    document.getElementById('appWrapper').classList.remove('body-night');
+    document.getElementById('flash-overlay').classList.remove('animate-lightning');
+    document.getElementById('lightning-element').classList.remove('strike');
+    
+    // Reset wires
+    for (let i = 1; i <= 6; i++) {
+        const path = document.getElementById(`wire-${i}`);
+        path.classList.add('flow-line');
+        if (i === 4) {
+            path.style.stroke = '#ff8f00';
+        } else if (i === 6) {
+            path.style.stroke = '#ffd54f';
+        } else {
+            path.style.stroke = '#ffe082';
+        }
+    }
+    
+    setLampOn(true);
+    setEnergyProduction(100);
+    
+    // Reset tree slider controls
+    document.getElementById('interact-panel').style.display = 'none';
+    treeElement.style.left = '-150px';
+    
+    // Reset weather
+    sunElement.style.background = 'radial-gradient(circle, #ffeb3b 30%, #ff9800 100%)';
+    sunElement.style.boxShadow = '0 0 30px #ffeb3b';
+    cloudElement.style.opacity = '0';
+    cloudElement.style.transform = 'scale(0.8)';
+}
+function startMission(id) {
+    currentActiveId = id;
+    
+    // Mark sidebar item as active
+    misiItems.forEach(mi => {
+        if(parseInt(mi.dataset.id) === id) {
+            mi.classList.add('active');
+        } else {
+            mi.classList.remove('active');
+        }
+    });
+    resetVisuals();
+    
+    // Show Quest Modal for "Tebak Hasil"
+    showQuestModal(id);
+}
+function showQuestModal(id) {
+    const mission = missions[id];
+    questQuestion.textContent = mission.question;
+    questOptions.innerHTML = '';
+    questFeedback.style.display = 'none';
+    
+    mission.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'quest-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => submitGuess(id, idx, btn));
+        questOptions.appendChild(btn);
+    });
+    
+    questModal.style.display = 'flex';
+}
+function submitGuess(missionId, optionIndex, buttonElement) {
+    const mission = missions[missionId];
+    const optionButtons = questOptions.querySelectorAll('.quest-btn');
+    
+    optionButtons.forEach(btn => btn.disabled = true);
+    
+    if(optionIndex === mission.correct) {
+        buttonElement.classList.add('correct');
+        questFeedback.className = 'quest-feedback correct-text';
+        questFeedback.textContent = "Jawaban Benar! +10 Poin Eksplorasi";
+        SoundFX.playSuccess();
+        
+        // Add points if not completed before
+        if(!completedMissions.has(missionId)) {
+            explorationPoints += 10;
+            poiCountEl.textContent = explorationPoints;
+        }
+    } else {
+        buttonElement.classList.add('incorrect');
+        optionButtons[mission.correct].classList.add('correct');
+        questFeedback.className = 'quest-feedback incorrect-text';
+        questFeedback.textContent = "Jawaban Salah! Menjalankan simulasi asli...";
+        SoundFX.playError();
+    }
+    
+    questFeedback.style.display = 'block';
+    
+    // Mark as completed
+    completedMissions.add(missionId);
+    document.querySelector(`.misi-item[data-id="${missionId}"]`).classList.add('completed');
+    
+    // Hide modal and run animation after short delay
+    setTimeout(() => {
+        questModal.style.display = 'none';
+        mission.run();
+        checkCompletion();
+    }, 2200);
+}
+// Slider tree interaction for Shading (Misi 6)
+const treeSlider = document.getElementById('tree-slider');
+treeSlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    
+    // Move tree towards the roof (panel center is around 50% left)
+    // Left boundary is -150px (0%), center boundary is 35% (100%)
+    const targetLeft = -150 + (val / 100) * (window.innerWidth < 768 ? 240 : 380);
+    treeElement.style.left = `${targetLeft}px`;
+    
+    // Adjust energy metrics based on shading value
+    if (val === 0) {
+        setEnergyProduction(100);
+        setLampOn(true);
+        updateStatusText("Pohon berada di luar atap. Produksi energi maksimal.");
+    } else if (val > 0 && val <= 30) {
+        setEnergyProduction(60);
+        setLampOn(true, true); // dim lamp
+        SoundFX.playHum();
+        updateStatusText("Sebagian panel tertutup bayangan pohon. Produksi turun ke 60% dan lampu meredup.");
+    } else if (val > 30 && val <= 75) {
+        setEnergyProduction(30);
+        setLampOn(true, true);
+        SoundFX.playHum();
+        updateStatusText("Panel surya tertutup bayangan cukup tebal. Daya turun menjadi 30%.");
+    } else {
+        setEnergyProduction(10);
+        setLampOn(false); // off lamp
+        stopElectricityFlow();
+        SoundFX.playHum();
+        updateStatusText("Panel surya terhalang penuh oleh bayangan pohon (shading). Daya tersisa 10% dan lampu padam.");
+    }
+});
+// Climate Weather interaction (Misi 7)
+const ctrlActionBtn = document.getElementById('ctrl-action-btn');
+let weatherMendung = false;
+ctrlActionBtn.addEventListener('click', () => {
+    if (currentActiveId === 7) {
+        weatherMendung = !weatherMendung;
+        if(weatherMendung) {
+            ctrlActionBtn.textContent = "☀️ Ubah Cerah";
+            sunElement.style.background = '#90a4ae';
+            sunElement.style.boxShadow = 'none';
+            cloudElement.style.opacity = '1';
+            cloudElement.style.transform = 'scale(1)';
+            setEnergyProduction(35);
+            setLampOn(true, true); // dim
+            updateStatusText("Panel surya tetap bekerja saat mendung, tetapi energi yang dihasilkan lebih sedikit dibanding cuaca cerah.");
+        } else {
+            ctrlActionBtn.textContent = "☁ Ubah Cuaca";
+            sunElement.style.background = 'radial-gradient(circle, #ffeb3b 30%, #ff9800 100%)';
+            sunElement.style.boxShadow = '0 0 30px #ffeb3b';
+            cloudElement.style.opacity = '0';
+            cloudElement.style.transform = 'scale(0.8)';
+            setEnergyProduction(100);
+            setLampOn(true); // bright
+            updateStatusText("Cuaca cerah kembali! Daya produksi solar panel naik ke 100%.");
+        }
+    }
+});
+function checkCompletion() {
+    if (completedMissions.size === 8) {
+        setTimeout(() => {
+            // Show certificate modal
+            document.getElementById('cert-final-score').textContent = explorationPoints;
+            document.getElementById('cert-modal').style.display = 'flex';
+        }, 4000);
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulasi PLTS - Langkah 5</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    background: url('/assets/background/simulasi_bg.png') center/cover no-repeat;
+    background-color: #3e2723;
+    display: flex;
+    flex-direction: column;
+}
+.wrapper {
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+/* Top wood/header */
+.top-wood {
+    width: 100%;
+    height: 64px;
+    background: #4b2d1d;
+    box-shadow: 0 6px 14px rgba(0,0,0,.35);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 100;
+}
+.top-wood::after {
+    content: "Langkah 5 dari 5";
+    color: #f6ecd9;
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+.top-wood::before {
+    content: "EVALUASI & RINGKASAN";
+    color: #f6ecd9;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 24px;
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+/* Dashboard Panel (Left) */
+.dashboard-panel {
+    background: rgba(246, 234, 208, 0.95);
+    border: 6px solid #5b341f;
+    border-radius: 16px;
+    padding: 24px;
+    color: #49352b;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.panel-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #5b341f;
+    border-bottom: 3px dashed #b07a3a;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+}
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.metric-card {
+    background: rgba(255, 255, 255, 0.6);
+    border: 2px solid #a67843;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.2s ease;
+}
+.metric-card:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.85);
+}
+.metric-card .label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #8b5e34;
+    text-transform: uppercase;
+}
+.metric-card .value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #2f6b2f;
+}
+.metric-card .subtext {
+    font-size: 11px;
+    font-weight: 600;
+    color: #795548;
+}
+/* Quiz Panel (Right) */
+.quiz-panel {
+    background: rgba(246, 234, 208, 0.95);
+    border: 6px solid #5b341f;
+    border-radius: 16px;
+    padding: 24px;
+    color: #49352b;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+}
+.quiz-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.question-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    color: #3e2723;
+}
+.options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.option-btn {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #a67843;
+    background: rgba(255,255,255,0.7);
+    border-radius: 10px;
+    text-align: left;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #49352b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.option-btn:hover {
+    background: #fff;
+    border-color: #5b341f;
+    transform: translateX(4px);
+}
+.option-btn.correct {
+    background: #e8f5e9;
+    border-color: #4caf50;
+    color: #2e7d32;
+}
+.option-btn.incorrect {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+}
+/* Quiz Progress */
+.quiz-progress {
+    font-size: 13px;
+    font-weight: 800;
+    color: #8b5e34;
+    margin-bottom: 12px;
+}
+/* Certificate Modal / Success State */
+.certificate-card {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    background: #fff;
+    border: 6px double #d0b07a;
+    border-radius: 12px;
+    box-shadow: inset 0 0 20px rgba(208, 176, 122, 0.2);
+    animation: zoomIn 0.4s ease-out;
+}
+.certificate-card h3 {
+    font-size: 1.4rem;
+    color: #b07a3a;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+.badge-icon {
+    width: 90px;
+    height: 90px;
+    background: #d0b07a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 15px 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+.badge-icon svg {
+    width: 50px;
+    height: 50px;
+    fill: #fff;
+}
+/* Bottom Bar */
+.bottom-bar {
+    width: 100%;
+    height: 80px;
+    background: rgba(75, 45, 29, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 24px;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+.btn-lanjut {
+    width: 280px;
+    height: 48px;
+    border: none;
+    background: #5f7c2f;
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-lanjut:hover:not(:disabled) {
+    background: #6e9036;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+.btn-lanjut:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+@keyframes zoomIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+/* RESPONSIVE DESIGN */
+@media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 16px;
+    }
+    .top-wood::after { font-size: 0.95rem; }
+    .top-wood::before { font-size: 0.8rem; }
+}
+@media (max-width: 480px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    .panel-title { font-size: 1.2rem; }
+    .question-text { font-size: 1rem; }
+    .option-btn { font-size: 0.85rem; padding: 10px 14px; }
+    .btn-lanjut { width: 90%; font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="top-wood"></div>
+    <div class="main-content">
+        <!-- Dashboard Panel (Left) -->
+        <div class="dashboard-panel">
+            <div class="panel-title">TELEMETRI SISTEM PLTS</div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="label">Panel Surya</div>
+                    <div class="value" id="val-panel">120 W</div>
+                    <div class="subtext">Arus DC: 6.2 Ampere</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="label">Baterai (VRLA)</div>
+                    <div class="value" id="val-battery">98%</div>
+                    <div class="subtext">Status: Mengisi (13.6V)</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="label">Output Inverter</div>
+                    <div class="value" id="val-inverter">220 V</div>
+                    <div class="subtext">Frekuensi AC: 50 Hz</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="label">Beban Lampu</div>
+                    <div class="value" id="val-lamp">15 W</div>
+                    <div class="subtext">Status: Menyala Terang</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 12px; font-weight: 600; line-height: 1.5; color: #5d4037; border-top: 1px solid #d7ccc8; padding-top: 10px; margin-top: auto;">
+                <strong>Catatan Kinerja:</strong> PLTS beroperasi dalam efisiensi puncak. Tegangan stabil disalurkan oleh Inverter dari konversi daya Baterai yang dijaga oleh SCC secara konstan.
+            </div>
+        </div>
+        <!-- Quiz Panel (Right) -->
+        <div class="quiz-panel">
+            <div class="panel-title">KUIS EVALUASI PLTS</div>
+            
+            <div class="quiz-container" id="quiz-container">
+                <div class="quiz-progress" id="quiz-progress">Pertanyaan 1 dari 3</div>
+                <div class="question-text" id="question-text">Memuat pertanyaan...</div>
+                
+                <div class="options-list" id="options-list">
+                    <!-- Option buttons will be generated here -->
+                </div>
+            </div>
+            <!-- Certificate (Hidden initially) -->
+            <div class="certificate-card" id="certificate-card">
+                <h3>SIMULASI SELESAI</h3>
+                <p>Selamat! Anda telah memahami cara memasang, menghubungkan kabel, menyalakan sistem PLTS, dan fungsi setiap komponennya dengan benar.</p>
+                <div class="badge-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17,17H7V16C7,14.67 9.67,14 12,14C14.33,14 17,14.67 17,16V17Z"/>
+                    </svg>
+                </div>
+                <p style="font-weight: 800; color: #2f6b2f; margin-top: 10px;">Lencana Kompetensi PLTS Aceh Diperoleh!</p>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-bar">
+        <button class="btn-lanjut" id="lanjutBtn" disabled onclick="window.location.href='../eksperimen/index.html'">SELESAI & LANJUT</button>
+    </div>
+</div>
+<script>
+// WebAudio tone generator
+function playTone(context, frequency, duration, type='sine'){
+    try{
+        const o = context.createOscillator();
+        const g = context.createGain();
+        o.type = type; o.frequency.value = frequency;
+        o.connect(g); g.connect(context.destination);
+        o.start(); g.gain.setValueAtTime(0.0001, context.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.15, context.currentTime+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, context.currentTime+duration);
+        o.stop(context.currentTime+duration+0.02);
+    }catch(e){ }
+}
+const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+const quizQuestions = [
+    {
+        q: "Apa fungsi utama dari komponen Inverter pada sistem PLTS?",
+        options: [
+            "Menyimpan energi matahari dalam bentuk daya kimia",
+            "Mengubah listrik arus searah (DC) menjadi arus bolak-balik (AC) untuk peralatan rumah",
+            "Mengurangi tegangan panel surya secara drastis"
+        ],
+        correct: 1
+    },
+    {
+        q: "Komponen apa yang berfungsi melindungi instalasi PLTS dari kerusakan akibat sambaran petir (surge)?",
+        options: [
+            "SPD (Surge Protective Device)",
+            "MCB (Miniature Circuit Breaker)",
+            "SCC (Solar Charge Controller)"
+        ],
+        correct: 0
+    },
+    {
+        q: "Mengapa SCC (Solar Charge Controller) diposisikan di antara Panel Surya dan Baterai?",
+        options: [
+            "Untuk mengubah listrik AC dari panel surya menjadi DC",
+            "Untuk mengatur arus pengisian agar Baterai tidak mengalami overcharging",
+            "Untuk mendinginkan baterai yang kepanasan"
+        ],
+        correct: 1
+    }
+];
+let currentQuestionIndex = 0;
+const quizContainer = document.getElementById('quiz-container');
+const certCard = document.getElementById('certificate-card');
+const qText = document.getElementById('question-text');
+const qProgress = document.getElementById('quiz-progress');
+const oList = document.getElementById('options-list');
+const lanjutBtn = document.getElementById('lanjutBtn');
+function loadQuestion(){
+    if(currentQuestionIndex >= quizQuestions.length) {
+        showSuccessState();
+        return;
+    }
+    
+    const currentQ = quizQuestions[currentQuestionIndex];
+    qProgress.textContent = `Pertanyaan ${currentQuestionIndex + 1} dari ${quizQuestions.length}`;
+    qText.textContent = currentQ.q;
+    
+    oList.innerHTML = '';
+    currentQ.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => selectOption(idx, btn));
+        oList.appendChild(btn);
+    });
+}
+function selectOption(selectedIndex, buttonElement){
+    const currentQ = quizQuestions[currentQuestionIndex];
+    const optionButtons = oList.querySelectorAll('.option-btn');
+    
+    // Disable all options
+    optionButtons.forEach(btn => btn.disabled = true);
+    
+    if(selectedIndex === currentQ.correct){
+        buttonElement.classList.add('correct');
+        playTone(audioCtx, 880, 0.15, 'sine');
+        setTimeout(() => {
+            currentQuestionIndex++;
+            loadQuestion();
+        }, 1500);
+    } else {
+        buttonElement.classList.add('incorrect');
+        // Show correct option
+        optionButtons[currentQ.correct].classList.add('correct');
+        playTone(audioCtx, 160, 0.25, 'square');
+        setTimeout(() => {
+            loadQuestion(); // Reload question to try again
+        }, 2200);
+    }
+}
+function showSuccessState(){
+    quizContainer.style.display = 'none';
+    certCard.style.display = 'flex';
+    lanjutBtn.disabled = false;
+    
+    // Play celebratory sound sequence
+    playTone(audioCtx, 523.25, 0.1, 'sine'); // C5
+    setTimeout(()=>playTone(audioCtx, 659.25, 0.1, 'sine'), 100); // E5
+    setTimeout(()=>playTone(audioCtx, 783.99, 0.1, 'sine'), 200); // G5
+    setTimeout(()=>playTone(audioCtx, 1046.50, 0.25, 'sine'), 300); // C6
+    
+    // Make dashboard metrics slightly fluctuate to feel alive
+    setInterval(() => {
+        const valPanel = document.getElementById('val-panel');
+        const fluctuation = Math.floor(Math.random() * 6) - 3;
+        valPanel.textContent = `${120 + fluctuation} W`;
+    }, 2000);
+}
+// Init Quiz
+loadQuestion();
+</script>
+</body>
+</html>
